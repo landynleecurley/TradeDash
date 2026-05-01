@@ -216,7 +216,23 @@ export default function SettingsPage() {
         <NotificationsBell className="ml-auto" />
       </header>
 
-      <main className="flex-1 w-full max-w-2xl mx-auto px-6 py-8 space-y-12">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-8 space-y-12">
+        {/* Header — wide so the tab strip lines up horizontally with /account
+             and /analytics, while the form content below stays narrow. */}
+        <section className="space-y-1">
+          <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage your profile, linked accounts, notifications, and appearance.
+          </p>
+          <nav className="flex flex-wrap gap-x-6 gap-y-2 mt-4 border-b border-border/40 pb-2">
+            <SettingsNavTab href="/account">Investing</SettingsNavTab>
+            <SettingsNavTab href="/analytics">Analytics</SettingsNavTab>
+            <SettingsNavTab href="/settings" active>Settings</SettingsNavTab>
+          </nav>
+        </section>
+
+        <div className="max-w-2xl mx-auto w-full space-y-12">
+
         {/* Profile */}
         <form onSubmit={saveProfile} className="space-y-6">
           <header>
@@ -565,6 +581,8 @@ export default function SettingsPage() {
             </Button>
           </div>
         </section>
+
+        </div>
       </main>
 
       <ConfirmModal
@@ -1292,5 +1310,18 @@ function ComingSoon({ icon, title, description }: { icon: React.ReactNode; title
         <p className="text-xs text-muted-foreground mt-1">{description}</p>
       </div>
     </div>
+  );
+}
+
+function SettingsNavTab({ href, active, children }: { href: string; active?: boolean; children: React.ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className={`text-sm font-semibold tracking-tight pb-2 -mb-px border-b-2 transition-colors ${
+        active ? 'border-foreground text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+      }`}
+    >
+      {children}
+    </Link>
   );
 }

@@ -447,7 +447,7 @@ export function Dashboard({ symbol }: { symbol: string }) {
         <section className="space-y-3">
           <div className="h-[360px] -mx-6 md:mx-0">
             {chartReady ? (
-              <ResponsiveContainer width="100%" height={360}>
+              <ResponsiveContainer width="100%" height={360} minWidth={0}>
                 <AreaChart data={activeChartData!} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">

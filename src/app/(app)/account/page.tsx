@@ -118,6 +118,7 @@ export default function AccountPage() {
           )}
           <nav className="flex flex-wrap gap-x-6 gap-y-2 mt-4 border-b border-border/40 pb-2">
             <NavTab href="/account" active>Investing</NavTab>
+            <NavTab href="/analytics">Analytics</NavTab>
             <NavTab href="/settings">Settings</NavTab>
           </nav>
         </section>
@@ -177,7 +178,7 @@ export default function AccountPage() {
           <div className="relative w-64 h-64 mx-auto md:mx-0">
             {isReady && allocations.length > 0 ? (
               <>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width={256} height={256}>
                   <PieChart>
                     <Tooltip
                       contentStyle={{
