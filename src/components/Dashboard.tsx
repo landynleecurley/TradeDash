@@ -20,7 +20,6 @@ import { getTodaySessionBounds, sessionAt, SESSION_LABEL, formatTimeOfDay } from
 import { makeLiveDot } from "@/components/ui/LiveDot";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine } from "recharts";
 import { Activity, ExternalLink, Bell, ArrowUp, ArrowDown, Check, X as XIcon, Crown } from "lucide-react";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
@@ -294,11 +293,10 @@ export function Dashboard({ symbol }: { symbol: string }) {
     return (
       <div className="flex flex-col flex-1 w-full bg-background">
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
-          <SidebarTrigger className="hover:opacity-75 transition-opacity shrink-0" />
           <SearchBar className="w-full max-w-sm shrink" />
           <TopNav className="hidden lg:flex shrink-0" />
         </header>
-        <main className="flex-1 w-full max-w-md mx-auto px-6 py-16 flex flex-col items-center text-center gap-4">
+        <main className="flex-1 w-full max-w-md mx-auto px-4 sm:px-6 py-16 flex flex-col items-center text-center gap-4">
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Not in your watchlist</p>
           <h1 className="text-3xl font-bold tracking-tight">{symbol}</h1>
           <p className="text-sm text-muted-foreground max-w-xs">
@@ -391,7 +389,6 @@ export function Dashboard({ symbol }: { symbol: string }) {
   return (
     <div className="flex flex-col flex-1 w-full bg-background">
       <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
-        <SidebarTrigger className="hover:opacity-75 transition-opacity shrink-0" />
         <SearchBar className="w-full max-w-sm shrink" />
         <TopNav className="hidden lg:flex shrink-0" />
         <div className="ml-auto flex items-center gap-4">
@@ -402,7 +399,7 @@ export function Dashboard({ symbol }: { symbol: string }) {
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: marketState.color }} />
             <span
-              className="text-[10px] font-bold uppercase tracking-widest"
+              className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest"
               style={{ color: marketState.color }}
             >
               {marketState.label}
@@ -413,19 +410,19 @@ export function Dashboard({ symbol }: { symbol: string }) {
               className={cn("h-2 w-2 rounded-full", isLive ? "animate-pulse" : "bg-muted-foreground/40")}
               style={isLive ? { backgroundColor: PROFIT } : undefined}
             />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+            <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               {isLive ? "Live" : "Offline"}
             </span>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-5xl mx-auto px-6 py-8 space-y-8">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-8">
         <section>
           <p className="text-sm font-medium text-muted-foreground tracking-wide">{selectedStock.name}</p>
           {isReady ? (
             <>
-              <h1 className="text-5xl md:text-6xl font-bold font-mono tracking-tight mt-1 tabular-nums">
+              <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold font-mono tracking-tight mt-1 tabular-nums">
                 <AnimatedNumber value={selectedStock.price} formatter={formatCurrency()} duration={300} />
               </h1>
               <p className="text-sm font-semibold mt-2 font-mono tabular-nums" style={{ color: accent }}>
@@ -445,9 +442,9 @@ export function Dashboard({ symbol }: { symbol: string }) {
         </section>
 
         <section className="space-y-3">
-          <div className="h-[360px] -mx-6 md:mx-0">
+          <div className="h-[260px] sm:h-[360px] -mx-4 sm:-mx-6 md:mx-0" style={{ touchAction: 'pan-y' }}>
             {chartReady ? (
-              <ResponsiveContainer width="100%" height={360} minWidth={0}>
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                 <AreaChart data={activeChartData!} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
                   <defs>
                     <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">

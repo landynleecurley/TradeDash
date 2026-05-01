@@ -13,10 +13,12 @@ function formatCardNumber(num: string, masked: boolean) {
   return digits.replace(/(.{4})/g, '$1 ').trim();
 }
 
-// Stylized EMV chip — gold gradient with the canonical contact pattern.
-function Chip() {
+// Stylized EMV chip — the SVG keeps its 4:3 viewBox and scales to whatever
+// width the parent gives it. That lets the chip shrink in lock-step with
+// the rest of the card on narrow viewports.
+function Chip({ className }: { className?: string }) {
   return (
-    <svg width="40" height="30" viewBox="0 0 40 30" aria-hidden>
+    <svg viewBox="0 0 40 30" aria-hidden className={className}>
       <defs>
         <linearGradient id="chipBody" x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#e6c98c" />
@@ -39,8 +41,6 @@ export function DebitCard({ card, gold = false }: { card: CardInfo; gold?: boole
 
   const frozen = card.status === 'frozen';
   const expiry = `${String(card.expiryMonth).padStart(2, '0')}/${String(card.expiryYear).slice(-2)}`;
-  // Metal trumps gold visually — the brushed steel finish reads as the
-  // "premium" tier even on a non-Gold account.
   const isMetal = card.cardType === 'metal';
   const accent = isMetal ? GOLD : gold ? GOLD : PROFIT;
   const background = isMetal
@@ -50,36 +50,68 @@ export function DebitCard({ card, gold = false }: { card: CardInfo; gold?: boole
       : `linear-gradient(135deg, #050505 0%, #1a1a1a 50%, var(--brand-30) 100%)`;
 
   return (
+    // `@container` makes every internal cqw/clamp() value resolve against the
+    // card's own width — so the same component prints correctly whether
+    // it's 240px wide on a phone or 480px in the wallet hero.
     <div
-      className="relative w-full max-w-sm aspect-[1.586/1] rounded-2xl p-6 text-white shadow-2xl overflow-hidden"
+      className="@container relative w-full max-w-md aspect-[1.586/1] rounded-2xl text-white shadow-2xl overflow-hidden"
       style={{ background }}
     >
-      <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full" style={{ backgroundColor: `${accent}10` }} />
-      <div className="absolute -bottom-16 -left-8 w-56 h-56 rounded-full" style={{ backgroundColor: `${accent}08` }} />
+      {/* Decorative gradient blobs — also sized in cqw so they keep their
+           position relative to the card, not the viewport. */}
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          top: '-30%', right: '-30%',
+          width: '60%', height: '60%',
+          backgroundColor: `${accent}10`,
+        }}
+      />
+      <div
+        className="absolute rounded-full pointer-events-none"
+        style={{
+          bottom: '-40%', left: '-15%',
+          width: '70%', height: '70%',
+          backgroundColor: `${accent}08`,
+        }}
+      />
 
-      <div className="relative h-full flex flex-col justify-between">
-        {/* Top row: brand left, virtual badge + reveal toggle right. */}
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-2">
-            <span className="font-black text-base tracking-tight italic" style={{ color: accent }}>
+      <div
+        className="relative h-full flex flex-col justify-between"
+        style={{ padding: 'clamp(0.875rem, 6cqw, 1.5rem)' }}
+      >
+        {/* Top row: brand left, badge + reveal toggle right. */}
+        <div className="flex items-start justify-between gap-2 min-w-0">
+          <div className="flex items-center gap-2 min-w-0 flex-shrink">
+            <span
+              className="font-black tracking-tight italic whitespace-nowrap"
+              style={{ color: accent, fontSize: 'clamp(0.875rem, 4.5cqw, 1.125rem)' }}
+            >
               TradeDash
             </span>
             {gold && (
               <span
-                className="text-[9px] font-bold uppercase tracking-[0.25em] px-1.5 py-0.5 rounded inline-flex items-center gap-1"
-                style={{ backgroundColor: `${GOLD}30`, color: GOLD }}
+                className="font-bold uppercase tracking-[0.25em] rounded inline-flex items-center gap-1 whitespace-nowrap"
+                style={{
+                  backgroundColor: `${GOLD}30`,
+                  color: GOLD,
+                  fontSize: 'clamp(0.5rem, 2.2cqw, 0.625rem)',
+                  padding: 'clamp(0.0625rem, 0.5cqw, 0.125rem) clamp(0.25rem, 1.4cqw, 0.4rem)',
+                }}
               >
-                <Crown className="h-2.5 w-2.5" />
+                <Crown style={{ width: 'clamp(0.5rem, 2.5cqw, 0.625rem)', height: 'clamp(0.5rem, 2.5cqw, 0.625rem)' }} />
                 Gold
               </span>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span
-              className="text-[9px] font-bold uppercase tracking-[0.25em] px-2 py-1 rounded border text-white/80"
+              className="font-bold uppercase tracking-[0.2em] rounded border whitespace-nowrap"
               style={{
+                fontSize: 'clamp(0.5rem, 2.2cqw, 0.625rem)',
+                padding: 'clamp(0.125rem, 0.8cqw, 0.25rem) clamp(0.375rem, 1.8cqw, 0.5rem)',
                 borderColor: card.cardType === 'virtual' ? 'rgba(255,255,255,0.3)' : `${accent}66`,
-                color: card.cardType === 'virtual' ? undefined : accent,
+                color: card.cardType === 'virtual' ? 'rgba(255,255,255,0.8)' : accent,
                 backgroundColor: card.cardType === 'virtual' ? undefined : `${accent}1a`,
               }}
             >
@@ -88,37 +120,94 @@ export function DebitCard({ card, gold = false }: { card: CardInfo; gold?: boole
             <button
               type="button"
               onClick={() => setRevealed(r => !r)}
-              className="h-7 w-7 rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center"
+              className="rounded-full bg-white/10 hover:bg-white/20 transition-colors flex items-center justify-center shrink-0"
+              style={{
+                width: 'clamp(1.5rem, 7cqw, 1.75rem)',
+                height: 'clamp(1.5rem, 7cqw, 1.75rem)',
+              }}
               aria-label={revealed ? 'Hide card details' : 'Show card details'}
             >
-              {revealed ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              {revealed
+                ? <EyeOff style={{ width: 'clamp(0.75rem, 3.5cqw, 0.875rem)', height: 'clamp(0.75rem, 3.5cqw, 0.875rem)' }} />
+                : <Eye style={{ width: 'clamp(0.75rem, 3.5cqw, 0.875rem)', height: 'clamp(0.75rem, 3.5cqw, 0.875rem)' }} />}
             </button>
           </div>
         </div>
 
         {/* Middle row: chip + contactless. */}
-        <div className="flex items-center gap-3">
-          <Chip />
-          <Wifi className="h-5 w-5 -rotate-90 opacity-70" aria-hidden />
+        <div className="flex items-center" style={{ gap: 'clamp(0.5rem, 2.5cqw, 0.75rem)' }}>
+          {/* 10cqw is roughly chip-sized at any zoom level; clamp keeps it
+               28-48px so it never disappears or balloons. */}
+          <div
+            className="shrink-0"
+            style={{ width: 'clamp(1.75rem, 10cqw, 3rem)' }}
+          >
+            <Chip className="w-full h-auto" />
+          </div>
+          <Wifi
+            className="-rotate-90 opacity-70 shrink-0"
+            style={{ width: 'clamp(1rem, 4.5cqw, 1.25rem)', height: 'clamp(1rem, 4.5cqw, 1.25rem)' }}
+            aria-hidden
+          />
         </div>
 
         {/* Bottom: card number + cardholder/expiry/cvv. */}
-        <div className="space-y-3">
-          <p className="font-mono text-base md:text-lg tracking-[0.2em]" aria-label="Card number">
+        <div style={{ gap: 'clamp(0.5rem, 2.5cqw, 0.75rem)' }} className="flex flex-col">
+          <p
+            className="font-mono whitespace-nowrap"
+            style={{
+              fontSize: 'clamp(0.875rem, 4.8cqw, 1.25rem)',
+              letterSpacing: '0.18em',
+            }}
+            aria-label="Card number"
+          >
             {formatCardNumber(card.cardNumber, !revealed)}
           </p>
-          <div className="flex items-end justify-between text-xs gap-3">
-            <div className="min-w-0">
-              <p className="text-[9px] uppercase tracking-widest opacity-60">Cardholder</p>
-              <p className="font-bold tracking-wide mt-0.5 truncate">{card.cardholderName ?? 'CARDHOLDER'}</p>
+          <div
+            className="flex items-end justify-between"
+            style={{ gap: 'clamp(0.5rem, 2.5cqw, 0.75rem)' }}
+          >
+            <div className="min-w-0 flex-1">
+              <p
+                className="uppercase tracking-widest opacity-60"
+                style={{ fontSize: 'clamp(0.5rem, 2cqw, 0.625rem)' }}
+              >
+                Cardholder
+              </p>
+              <p
+                className="font-bold tracking-wide truncate"
+                style={{ marginTop: '0.125rem', fontSize: 'clamp(0.625rem, 2.6cqw, 0.75rem)' }}
+              >
+                {card.cardholderName ?? 'CARDHOLDER'}
+              </p>
             </div>
             <div className="shrink-0">
-              <p className="text-[9px] uppercase tracking-widest opacity-60">Expires</p>
-              <p className="font-mono font-bold mt-0.5">{expiry}</p>
+              <p
+                className="uppercase tracking-widest opacity-60"
+                style={{ fontSize: 'clamp(0.5rem, 2cqw, 0.625rem)' }}
+              >
+                Expires
+              </p>
+              <p
+                className="font-mono font-bold"
+                style={{ marginTop: '0.125rem', fontSize: 'clamp(0.625rem, 2.6cqw, 0.75rem)' }}
+              >
+                {expiry}
+              </p>
             </div>
             <div className="shrink-0">
-              <p className="text-[9px] uppercase tracking-widest opacity-60">CVV</p>
-              <p className="font-mono font-bold mt-0.5">{revealed ? card.cvv : '•••'}</p>
+              <p
+                className="uppercase tracking-widest opacity-60"
+                style={{ fontSize: 'clamp(0.5rem, 2cqw, 0.625rem)' }}
+              >
+                CVV
+              </p>
+              <p
+                className="font-mono font-bold"
+                style={{ marginTop: '0.125rem', fontSize: 'clamp(0.625rem, 2.6cqw, 0.75rem)' }}
+              >
+                {revealed ? card.cvv : '•••'}
+              </p>
             </div>
           </div>
         </div>
@@ -126,8 +215,19 @@ export function DebitCard({ card, gold = false }: { card: CardInfo; gold?: boole
 
       {frozen && (
         <div className="absolute inset-0 flex flex-col items-center justify-center backdrop-blur-md bg-blue-950/60">
-          <Snowflake className="h-10 w-10 text-blue-200" />
-          <p className="mt-2 text-xs font-bold uppercase tracking-[0.3em] text-blue-100">Frozen</p>
+          <Snowflake
+            className="text-blue-200"
+            style={{ width: 'clamp(1.5rem, 12cqw, 2.5rem)', height: 'clamp(1.5rem, 12cqw, 2.5rem)' }}
+          />
+          <p
+            className="font-bold uppercase tracking-[0.3em] text-blue-100"
+            style={{
+              marginTop: '0.5rem',
+              fontSize: 'clamp(0.5rem, 2.5cqw, 0.75rem)',
+            }}
+          >
+            Frozen
+          </p>
         </div>
       )}
     </div>

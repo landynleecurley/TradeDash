@@ -29,8 +29,8 @@ import {
   formatSignedPercent,
 } from "@/components/ui/AnimatedNumber";
 import {
-  Activity, CircleUserRound, Copy, Crown, ExternalLink, Home, LogOut, Plus,
-  ScrollText, Trash2, TrendingDown, TrendingUp, Wallet, X,
+  Activity, Copy, ExternalLink, LogOut, Plus,
+  Trash2, TrendingDown, TrendingUp, X,
 } from "lucide-react";
 import { LineChart, Line, YAxis } from "recharts";
 
@@ -77,7 +77,6 @@ export function AppSidebar() {
     dayChange,
     dayChangePercent,
     cashBalance,
-    isGoldActive,
     refresh,
   } = useGlobalStockData();
 
@@ -86,11 +85,6 @@ export function AppSidebar() {
   }, []);
 
   const activeSymbol = pathname?.match(/^\/stock\/([^/]+)/)?.[1]?.toUpperCase();
-  const isHome = pathname === '/';
-  const isWallet = pathname === '/wallet';
-  const isActivity = pathname === '/activity';
-  const isAccount = pathname === '/account';
-  const isGold = pathname === '/gold';
 
   if (!mounted) {
     return (
@@ -114,59 +108,6 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup className="lg:hidden">
-          <SidebarGroupContent className="px-3 pt-2 pb-1 space-y-1">
-            <SidebarMenuButton
-              render={<Link href="/" />}
-              isActive={isHome}
-              className="h-auto py-2 px-3 rounded-md hover:bg-foreground/5 data-[active=true]:bg-foreground/10 transition-colors"
-            >
-              <Home className="h-4 w-4" />
-              <span className="text-sm font-semibold tracking-tight">Portfolio</span>
-            </SidebarMenuButton>
-            <SidebarMenuButton
-              render={<Link href="/wallet" />}
-              isActive={isWallet}
-              className="h-auto py-2 px-3 rounded-md hover:bg-foreground/5 data-[active=true]:bg-foreground/10 transition-colors"
-            >
-              <Wallet className="h-4 w-4" />
-              <span className="text-sm font-semibold tracking-tight">Wallet</span>
-            </SidebarMenuButton>
-            <SidebarMenuButton
-              render={<Link href="/activity" />}
-              isActive={isActivity}
-              className="h-auto py-2 px-3 rounded-md hover:bg-foreground/5 data-[active=true]:bg-foreground/10 transition-colors"
-            >
-              <ScrollText className="h-4 w-4" />
-              <span className="text-sm font-semibold tracking-tight">Activity</span>
-            </SidebarMenuButton>
-            <SidebarMenuButton
-              render={<Link href="/account" />}
-              isActive={isAccount}
-              className="h-auto py-2 px-3 rounded-md hover:bg-foreground/5 data-[active=true]:bg-foreground/10 transition-colors"
-            >
-              <CircleUserRound className="h-4 w-4" />
-              <span className="text-sm font-semibold tracking-tight">Account</span>
-            </SidebarMenuButton>
-            <SidebarMenuButton
-              render={<Link href="/gold" />}
-              isActive={isGold}
-              className="h-auto py-2 px-3 rounded-md hover:bg-foreground/5 data-[active=true]:bg-foreground/10 transition-colors"
-            >
-              <Crown className="h-4 w-4" style={{ color: '#E8B530' }} />
-              <span className="text-sm font-semibold tracking-tight">Gold</span>
-              {isGoldActive && (
-                <span
-                  className="ml-auto text-[9px] font-bold uppercase tracking-[0.2em] px-1.5 py-0.5 rounded"
-                  style={{ backgroundColor: '#E8B53020', color: '#E8B530' }}
-                >
-                  Active
-                </span>
-              )}
-            </SidebarMenuButton>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest">
             Summary

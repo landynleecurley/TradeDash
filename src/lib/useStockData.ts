@@ -170,6 +170,7 @@ export function useStockData() {
   const [lastName, setLastName] = useState<string | null>(null);
   const [accountCreatedAt, setAccountCreatedAt] = useState<string | null>(null);
   const [email, setEmail] = useState<string | null>(null);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [isLive, setIsLive] = useState(false);
   const [usingMock, setUsingMock] = useState(false);
   const [isReady, setIsReady] = useState(false);
@@ -185,6 +186,9 @@ export function useStockData() {
     }
     setUserId(user.id);
     setEmail(user.email ?? null);
+    // Supabase exposes `is_anonymous` on the user object after signInAnonymously.
+    // Falls back to false on older auth payloads where the field is missing.
+    setIsAnonymous(((user as unknown) as { is_anonymous?: boolean }).is_anonymous === true);
     setAccountCreatedAt(user.created_at ?? null);
 
     const [profileRes, positionsRes, watchlistRes, transactionsRes, cardRes, membershipRes, externalAccountsRes, notificationsRes, priceAlertsRes] = await Promise.all([
@@ -617,6 +621,7 @@ export function useStockData() {
     email,
     accountCreatedAt,
     userId,
+    isAnonymous,
     isLive,
     isReady,
     usingMockData: usingMock,

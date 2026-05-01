@@ -23,7 +23,6 @@ import {
   type Theme,
   type ThemeColor,
 } from "@/lib/actions";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
@@ -210,13 +209,12 @@ export default function SettingsPage() {
   return (
     <div className="flex flex-col flex-1 w-full bg-background">
       <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
-        <SidebarTrigger className="hover:opacity-75 transition-opacity shrink-0" />
         <SearchBar className="w-full max-w-sm shrink" />
         <TopNav className="hidden lg:flex shrink-0" />
         <NotificationsBell className="ml-auto" />
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-8 space-y-12">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
         {/* Header — wide so the tab strip lines up horizontally with /account
              and /analytics, while the form content below stays narrow. */}
         <section className="space-y-1">

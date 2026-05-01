@@ -14,7 +14,6 @@ import { TransactionDetailModal } from "@/components/TransactionDetailModal";
 import { OrderPhysicalCardModal } from "@/components/OrderPhysicalCardModal";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
@@ -158,17 +157,16 @@ export default function WalletPage() {
   return (
     <div className="flex flex-col flex-1 w-full bg-background">
       <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
-        <SidebarTrigger className="hover:opacity-75 transition-opacity shrink-0" />
         <SearchBar className="w-full max-w-sm shrink" />
         <TopNav className="hidden lg:flex shrink-0" />
         <NotificationsBell className="ml-auto" />
       </header>
 
-      <main className="flex-1 w-full max-w-3xl mx-auto px-6 py-8 space-y-10">
+      <main className="flex-1 w-full max-w-3xl mx-auto px-4 sm:px-6 py-8 space-y-10">
         <section>
           <p className="text-sm font-medium text-muted-foreground tracking-wide uppercase">Cash Balance</p>
           {isReady ? (
-            <h1 className="text-6xl md:text-7xl font-bold font-mono tracking-tight mt-2 leading-none tabular-nums">
+            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold font-mono tracking-tight mt-2 leading-none tabular-nums break-words">
               <AnimatedNumber value={cashBalance} formatter={formatCurrency()} duration={500} />
             </h1>
           ) : (

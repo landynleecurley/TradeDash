@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { useGlobalStockData } from "@/components/StockDataProvider";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SidebarTrigger } from "@/components/ui/sidebar";
 import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
@@ -200,13 +199,12 @@ export default function AnalyticsPage() {
   return (
     <div className="flex flex-col flex-1 w-full bg-background">
       <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
-        <SidebarTrigger className="hover:opacity-75 transition-opacity shrink-0" />
         <SearchBar className="w-full max-w-sm shrink" />
         <TopNav className="hidden lg:flex shrink-0" />
         <NotificationsBell className="ml-auto" />
       </header>
 
-      <main className="flex-1 w-full max-w-6xl mx-auto px-6 py-8 space-y-12">
+      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-6 py-8 space-y-12">
         {/* Identity + tabs */}
         <section className="space-y-1">
           <h1 className="text-3xl font-bold tracking-tight">Your activity</h1>
@@ -291,8 +289,8 @@ export default function AnalyticsPage() {
                   Cumulative deposits and withdrawals over time. Net = deposits − withdrawals.
                 </p>
               </header>
-              <div className="h-[260px] -mx-6 md:mx-0">
-                <ResponsiveContainer width="100%" height={260} minWidth={0}>
+              <div className="h-[260px] -mx-4 sm:-mx-6 md:mx-0" style={{ touchAction: 'pan-y' }}>
+                <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                   <AreaChart data={cashFlow} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
                     <defs>
                       <linearGradient id="depGrad" x1="0" y1="0" x2="0" y2="1">
@@ -419,8 +417,8 @@ export default function AnalyticsPage() {
                 {topSymbols.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No trades yet.</p>
                 ) : (
-                  <div className="h-[200px]">
-                    <ResponsiveContainer width="100%" height={200} minWidth={0}>
+                  <div className="h-[200px]" style={{ touchAction: 'pan-y' }}>
+                    <ResponsiveContainer width="100%" height="100%" minWidth={0}>
                       <BarChart data={topSymbols} layout="vertical" margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
                         <YAxis
                           type="category"
