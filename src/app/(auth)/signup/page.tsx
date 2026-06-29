@@ -402,8 +402,9 @@ export default function SignupPage() {
           </div>
         </div>
 
-        {/* Step content area */}
-        <div className="flex-1 flex justify-center px-6 py-8">
+        {/* Step content area — vertically centered so short steps don't strand
+            the button at the bottom of the viewport. */}
+        <div className="flex-1 flex items-center justify-center px-6 py-8">
           <div className="w-full max-w-md flex flex-col">
             {/* Logo + byline — mobile only (brand panel is hidden below md) */}
             <AuthWordmark className="md:hidden mb-6" />
@@ -420,8 +421,9 @@ export default function SignupPage() {
               <InfoHint label={STEP_DESCRIPTION[step]} side="bottom" />
             </header>
 
-            {/* Fixed min height so the panel doesn't jump between short and tall steps */}
-            <div className="mt-6 flex-1 min-h-[420px] flex flex-col">
+            {/* Min height keeps the panel from jumping between short and tall
+                steps; the box no longer stretches to the full viewport. */}
+            <div className="mt-6 min-h-[300px] flex flex-col">
 
       {step === 'account' && (
         <form onSubmit={submitAccount} className="flex-1 flex flex-col space-y-5">
