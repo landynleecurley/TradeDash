@@ -7,6 +7,7 @@ import {
   CreditCard, Sparkles, TrendingUp, Wallet, X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InfoHint } from "@/components/ui/InfoHint";
 import { useGlobalStockData } from "@/components/StockDataProvider";
 
 const PROFIT = "var(--brand)";
@@ -178,19 +179,19 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
                   {step.done ? <Check className="h-4 w-4" /> : step.icon}
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p
-                    className={`text-sm font-bold tracking-tight ${
-                      step.done ? 'text-muted-foreground line-through decoration-muted-foreground/50' : ''
-                    }`}
-                  >
-                    <span className="text-muted-foreground/60 mr-1.5 font-mono text-xs">
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    {step.title}
-                  </p>
-                  {!step.done && (
-                    <p className="text-xs text-muted-foreground mt-0.5">{step.detail}</p>
-                  )}
+                  <div className="flex items-center gap-1.5">
+                    <p
+                      className={`text-sm font-bold tracking-tight ${
+                        step.done ? 'text-muted-foreground line-through decoration-muted-foreground/50' : ''
+                      }`}
+                    >
+                      <span className="text-muted-foreground/60 mr-1.5 font-mono text-xs">
+                        {String(i + 1).padStart(2, '0')}
+                      </span>
+                      {step.title}
+                    </p>
+                    {!step.done && <InfoHint label={step.detail} side="top" />}
+                  </div>
                 </div>
               </div>
               {!step.done && (

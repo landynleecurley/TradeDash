@@ -8,9 +8,10 @@ import { createClient } from "@/lib/supabase-browser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { AuthBrandPanel, AuthWordmark } from "@/components/AuthBrandPanel";
+import { InfoHint } from "@/components/ui/InfoHint";
 import {
   ArrowLeft, ArrowRight, Eye, EyeOff, Sparkles, GraduationCap, Briefcase,
-  TrendingUp, Wallet, ShieldCheck, Scale, Rocket, Building2, CreditCard, Check,
+  TrendingUp, ShieldCheck, Scale, Rocket, Building2, CreditCard, Check,
 } from "lucide-react";
 import {
   completeOnboarding,
@@ -46,6 +47,17 @@ const STEP_SUBTITLE: Record<Step, string> = {
   bank: 'Connect a bank to move money in and out — securely, in seconds.',
   deposit: 'Fund your wallet and start putting your money to work.',
   card: 'A virtual debit card that spends straight from your wallet.',
+};
+
+// Step descriptions live behind the (i) next to each title so the form stays
+// text-light — the numbers and inputs do the talking.
+const STEP_DESCRIPTION: Record<Step, string> = {
+  account: 'Email + password. We send confirmations and login codes here.',
+  personal: 'Required for account verification. You must be 18 or older to use TradeDash.',
+  investor: 'Helps us tailor your dashboard. You can change these any time in Settings.',
+  bank: 'Connect a bank to fund your wallet. You can skip and link one later.',
+  deposit: 'Pull cash from your linked bank into your wallet — no minimum.',
+  card: "Issue your virtual debit card to spend your wallet anywhere cards are accepted — a Luhn-valid 16-digit card tied to your cash balance, with no credit and no overdraft. Upgrade to a physical or metal card any time from your wallet.",
 };
 
 // Quick-connect demo banks for the optional bank step. Mirrors the list in
@@ -396,7 +408,7 @@ export default function SignupPage() {
             {/* Logo + byline — mobile only (brand panel is hidden below md) */}
             <AuthWordmark className="md:hidden mb-6" />
 
-            <header>
+            <header className="flex items-center gap-2">
               <h1 className="text-3xl font-bold tracking-tight">
                 {step === 'account' && 'Create your account'}
                 {step === 'personal' && 'A bit about you'}
@@ -405,14 +417,7 @@ export default function SignupPage() {
                 {step === 'deposit' && 'Make your first deposit'}
                 {step === 'card' && 'Get your debit card'}
               </h1>
-              <p className="text-sm text-muted-foreground mt-1.5">
-                {step === 'account' && 'Email + password. We send confirmations and login codes here.'}
-                {step === 'personal' && 'Required for account verification. You must be 18 or older to use TradeDash.'}
-                {step === 'investor' && 'Helps us tailor your dashboard. You can change these any time in Settings.'}
-                {step === 'bank' && 'Connect a bank to fund your wallet. You can skip and link one later.'}
-                {step === 'deposit' && 'Pull cash from your linked bank into your wallet — no minimum.'}
-                {step === 'card' && 'Issue your virtual debit card. Spend your wallet anywhere cards are accepted.'}
-              </p>
+              <InfoHint label={STEP_DESCRIPTION[step]} side="bottom" />
             </header>
 
             {/* Fixed min height so the panel doesn't jump between short and tall steps */}
@@ -607,8 +612,9 @@ export default function SignupPage() {
 
           {/* Income */}
           <div className="space-y-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
+            <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground inline-flex items-center gap-1.5">
               Annual income
+              <InfoHint label="We never share this — it only shapes your default risk recommendations." side="right" />
             </p>
             <div className="flex flex-wrap gap-1 p-1 bg-foreground/5 rounded-lg">
               {INCOME_RANGES.map(r => {
@@ -630,10 +636,6 @@ export default function SignupPage() {
                 );
               })}
             </div>
-            <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5">
-              <Wallet className="h-3 w-3" />
-              We never share this. Used only to shape your default risk recommendations.
-            </p>
           </div>
 
           {/* Risk */}
@@ -885,12 +887,6 @@ export default function SignupPage() {
             </div>
           </div>
 
-          <ul className="text-xs text-muted-foreground space-y-1.5 list-disc list-inside marker:text-muted-foreground/40">
-            <li>Luhn-valid 16-digit number on the virtual <span className="font-mono">9999</span> BIN</li>
-            <li>Tied to your wallet&rsquo;s cash balance — no credit, no overdraft</li>
-            <li>Upgrade to a physical or metal card any time from your wallet</li>
-          </ul>
-
           {err && <p className="text-sm font-medium text-rose-500">{err}</p>}
 
           <div className="mt-auto flex items-center justify-between pt-4">
@@ -960,31 +956,35 @@ function RadioCard({
   detail: string;
 }) {
   return (
-    <button
-      type="button"
-      role="radio"
-      aria-checked={selected}
-      onClick={onClick}
-      className={`w-full text-left rounded-lg border p-4 transition-all flex flex-col gap-2 ${
-        selected
-          ? 'border-foreground/40 bg-foreground/[0.04] shadow-sm'
-          : 'border-border/50 hover:border-border hover:bg-foreground/[0.02]'
-      }`}
-    >
-      <div
-        className="h-9 w-9 rounded-full flex items-center justify-center"
-        style={{
-          backgroundColor: iconColor
-            ? `color-mix(in srgb, ${iconColor} 12%, transparent)`
-            : 'var(--muted)',
-          color: iconColor ?? 'var(--foreground)',
-        }}
+    <div className="relative">
+      <button
+        type="button"
+        role="radio"
+        aria-checked={selected}
+        aria-label={title}
+        onClick={onClick}
+        className={`w-full text-left rounded-lg border p-4 pr-9 transition-all flex flex-col gap-2 ${
+          selected
+            ? 'border-foreground/40 bg-foreground/[0.04] shadow-sm'
+            : 'border-border/50 hover:border-border hover:bg-foreground/[0.02]'
+        }`}
       >
-        {icon}
-      </div>
-      <p className="text-sm font-bold tracking-tight">{title}</p>
-      <p className="text-xs text-muted-foreground leading-snug">{detail}</p>
-    </button>
+        <div
+          className="h-9 w-9 rounded-full flex items-center justify-center"
+          style={{
+            backgroundColor: iconColor
+              ? `color-mix(in srgb, ${iconColor} 12%, transparent)`
+              : 'var(--muted)',
+            color: iconColor ?? 'var(--foreground)',
+          }}
+        >
+          {icon}
+        </div>
+        <p className="text-sm font-bold tracking-tight">{title}</p>
+      </button>
+      {/* Sibling of the button (not nested) so we don't put a button in a button */}
+      <InfoHint label={detail} side="top" className="absolute right-2 top-2" />
+    </div>
   );
 }
 
