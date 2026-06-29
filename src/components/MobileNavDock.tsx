@@ -38,7 +38,7 @@ export function MobileNavDock() {
               aria-current={active ? 'page' : undefined}
               className="relative flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-bold uppercase tracking-widest transition-colors"
               style={{
-                color: active ? (isGold ? GOLD : 'var(--foreground)') : undefined,
+                color: active ? (isGold ? GOLD : PROFIT) : undefined,
               }}
             >
               <span className="relative">

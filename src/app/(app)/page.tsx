@@ -274,8 +274,8 @@ export default function Home() {
 
   return (
     <div className="flex flex-col flex-1 w-full bg-background">
-      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
-        <SearchBar className="w-full max-w-sm shrink" />
+      <header className="sticky top-[var(--demo-banner-h,0px)] z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
+        <SearchBar className="w-full max-w-none sm:max-w-sm shrink" />
         <TopNav className="hidden lg:flex shrink-0" />
         <div className="ml-auto flex items-center gap-4">
           <NotificationsBell />
@@ -300,7 +300,7 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 py-8 space-y-10">
+      <main className="flex-1 w-full max-w-5xl mx-auto px-4 sm:px-6 pt-4 sm:pt-8 pb-8 space-y-6 sm:space-y-10">
         <OnboardingChecklist
           onAddSymbol={() => setAddSymbolOpen(true)}
           onDeposit={() => setDepositOpen(true)}
@@ -311,10 +311,10 @@ export default function Home() {
           <p className="text-sm font-medium text-muted-foreground tracking-wide uppercase">Portfolio</p>
           {isReady ? (
             <>
-              <h1 className="text-5xl sm:text-7xl md:text-8xl font-bold font-mono tracking-tight mt-2 leading-none break-words">
+              <h1 className="text-4xl sm:text-6xl md:text-8xl font-bold font-mono tracking-tight tabular-nums mt-2 leading-none break-words">
                 ${totalWealth.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </h1>
-              <div className="flex flex-wrap items-baseline gap-x-6 gap-y-1 mt-4">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-baseline gap-1 sm:gap-x-6 sm:gap-y-1 mt-4">
                 <p className="text-base font-semibold font-mono" style={{ color: totalGain >= 0 ? PROFIT : LOSS }}>
                   {totalGain >= 0 ? "+" : ""}${totalGain.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ({totalGainPercent.toFixed(2)}%)
                   <span className="ml-2 text-muted-foreground font-medium">All time</span>
@@ -324,14 +324,14 @@ export default function Home() {
                   <span className="ml-2 text-muted-foreground font-medium">Today</span>
                 </p>
               </div>
-              <div className="mt-5 flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm font-mono text-muted-foreground">
-                <p>
+              <div className="mt-5 grid grid-cols-2 gap-3 sm:flex sm:flex-wrap sm:items-baseline sm:gap-x-6 sm:gap-y-1 text-sm font-mono text-muted-foreground">
+                <p className="flex flex-col sm:block">
                   <span className="font-semibold text-foreground">${cashBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="ml-2 uppercase text-[10px] font-bold tracking-widest">Cash</span>
+                  <span className="uppercase text-xs font-bold tracking-widest sm:ml-2">Cash</span>
                 </p>
-                <p>
+                <p className="flex flex-col sm:block">
                   <span className="font-semibold text-foreground">${totalPortfolioValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                  <span className="ml-2 uppercase text-[10px] font-bold tracking-widest">Investments</span>
+                  <span className="uppercase text-xs font-bold tracking-widest sm:ml-2">Investments</span>
                 </p>
               </div>
             </>
@@ -408,7 +408,7 @@ export default function Home() {
             )}
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 overflow-x-auto snap-x scroll-smooth -mx-4 px-4 sm:mx-0 sm:px-0 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {PERIODS.map(({ key }) => {
               const active = key === period;
               return (
@@ -416,7 +416,7 @@ export default function Home() {
                   key={key}
                   onClick={() => setPeriod(key)}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-bold rounded-full transition-colors uppercase tracking-wide",
+                    "shrink-0 snap-start px-3.5 py-2.5 text-xs font-bold rounded-full transition-colors uppercase tracking-wide",
                     active ? "bg-foreground/10" : "text-muted-foreground hover:bg-foreground/5",
                   )}
                   style={active ? { color: chartAccent } : undefined}
@@ -429,7 +429,7 @@ export default function Home() {
         </section>
 
         <section>
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-4">Positions</h2>
+          <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Positions</h2>
           {stocks.some(s => s.shares > 0) ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {stocks.filter(s => s.shares > 0).map(stock => (
@@ -446,11 +446,11 @@ export default function Home() {
         {stocks.some(s => s.shares === 0) && (
           <section className="md:hidden">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Watchlist</h2>
+              <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Watchlist</h2>
               <button
                 type="button"
                 onClick={() => setAddSymbolOpen(true)}
-                className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors"
+                className="text-xs font-bold uppercase tracking-widest text-muted-foreground hover:text-foreground transition-colors px-2 py-1 -mr-2"
               >
                 + Add
               </button>
@@ -553,7 +553,7 @@ function PositionCard({ stock, isReady }: { stock: StockInfo; isReady: boolean }
           ) : (
             <Skeleton className="h-6 w-20" />
           )}
-          <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-widest mt-1">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest mt-1">
             {stock.shares} shares
           </p>
         </div>
@@ -562,7 +562,7 @@ function PositionCard({ stock, isReady }: { stock: StockInfo; isReady: boolean }
             <p className="text-sm font-bold font-mono" style={{ color: positive ? PROFIT : LOSS }}>
               {positive ? "+" : ""}{stock.changePercent.toFixed(2)}%
             </p>
-            <p className="text-[10px] font-medium font-mono mt-0.5" style={{ color: positionGain >= 0 ? PROFIT : LOSS }}>
+            <p className="text-xs font-medium font-mono mt-0.5" style={{ color: positionGain >= 0 ? PROFIT : LOSS }}>
               {positionGain >= 0 ? "+" : ""}${positionGain.toFixed(2)}
             </p>
           </div>

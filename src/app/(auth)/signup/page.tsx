@@ -7,8 +7,9 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase-browser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { AuthBrandPanel } from "@/components/AuthBrandPanel";
 import {
-  ArrowLeft, ArrowRight, Eye, EyeOff, Sparkles, GraduationCap, Briefcase,
+  Activity, ArrowLeft, ArrowRight, Eye, EyeOff, Sparkles, GraduationCap, Briefcase,
   TrendingUp, Wallet, ShieldCheck, Scale, Rocket, Building2, CreditCard, Check,
 } from "lucide-react";
 import {
@@ -35,6 +36,17 @@ const STEPS: { key: Step; label: string; required: boolean }[] = [
   { key: 'deposit', label: 'Deposit', required: false },
   { key: 'card', label: 'Card', required: false },
 ];
+
+// Per-step subtitle for the shared brand panel — keeps the left side speaking
+// to whatever the user is doing on the right instead of sitting static.
+const STEP_SUBTITLE: Record<Step, string> = {
+  account: 'One account for your portfolio, your wallet, and the card that spends it.',
+  personal: "We're required by law to verify your identity before you can trade.",
+  investor: 'A quick profile so we can tailor your dashboard to how you invest.',
+  bank: 'Connect a bank to move money in and out — securely, in seconds.',
+  deposit: 'Fund your wallet and start putting your money to work.',
+  card: 'A virtual debit card that spends straight from your wallet.',
+};
 
 // Quick-connect demo banks for the optional bank step. Mirrors the list in
 // LinkAccountModal so users get a consistent set across both flows.
@@ -344,53 +356,73 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="w-full max-w-md space-y-6">
-      <header className="space-y-3">
-        <div className="flex items-center justify-between gap-2">
-          {STEPS.map((s, i) => (
-            <div key={s.key} className="flex-1">
-              <div
-                className={`h-1.5 rounded-full transition-colors ${
-                  i <= stepIndex ? '' : 'bg-foreground/10'
-                }`}
-                style={i <= stepIndex ? { backgroundColor: PROFIT } : undefined}
-              />
+    <main className="min-h-screen flex bg-background">
+      <AuthBrandPanel subtitle={STEP_SUBTITLE[step]} />
+
+      <div className="w-full md:w-1/2 flex flex-col bg-background">
+        {/* Sticky progress — full-width segmented bar with the label below it.
+            The only wayfinding on mobile, so it stays pinned as content scrolls. */}
+        <div className="sticky top-0 z-10 border-b border-border/40 bg-background/90 backdrop-blur-xl px-6 pt-6 pb-4">
+          <div className="mx-auto w-full max-w-md">
+            <div className="flex items-center gap-2">
+              {STEPS.map((s, i) => (
+                <div key={s.key} className="flex-1">
+                  <div
+                    className={`h-1.5 rounded-full transition-colors ${
+                      i <= stepIndex ? '' : 'bg-foreground/10'
+                    }`}
+                    style={i <= stepIndex ? { backgroundColor: PROFIT } : undefined}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+            <p className="mt-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+              Step {stepIndex + 1} of {STEPS.length} · {STEPS[stepIndex].label}
+              {isOptionalStep && (
+                <span
+                  className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold"
+                  style={{ backgroundColor: `${AMBER}1a`, color: AMBER }}
+                >
+                  OPTIONAL
+                </span>
+              )}
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-            Step {stepIndex + 1} of {STEPS.length} · {STEPS[stepIndex].label}
-            {isOptionalStep && (
-              <span
-                className="ml-2 px-1.5 py-0.5 rounded text-[9px] font-bold"
-                style={{ backgroundColor: `${AMBER}1a`, color: AMBER }}
-              >
-                OPTIONAL
-              </span>
-            )}
-          </p>
-          <h1 className="text-3xl font-bold tracking-tight mt-1">
-            {step === 'account' && 'Create your account'}
-            {step === 'personal' && 'A bit about you'}
-            {step === 'investor' && 'Your investor profile'}
-            {step === 'bank' && 'Link your first bank'}
-            {step === 'deposit' && 'Make your first deposit'}
-            {step === 'card' && 'Get your debit card'}
-          </h1>
-          <p className="text-sm text-muted-foreground mt-1.5">
-            {step === 'account' && 'Email + password. We send confirmations and login codes here.'}
-            {step === 'personal' && 'Required for account verification. You must be 18 or older to use TradeDash.'}
-            {step === 'investor' && 'Helps us tailor your dashboard. You can change these any time in Settings.'}
-            {step === 'bank' && 'Connect a bank to fund your wallet. You can skip and link one later.'}
-            {step === 'deposit' && 'Pull cash from your linked bank into your wallet — no minimum.'}
-            {step === 'card' && 'Issue your virtual debit card. Spend your wallet anywhere cards are accepted.'}
-          </p>
-        </div>
-      </header>
+
+        {/* Step content area */}
+        <div className="flex-1 flex justify-center px-6 py-8">
+          <div className="w-full max-w-md flex flex-col">
+            {/* Logo — mobile only (brand panel is hidden below md) */}
+            <div className="md:hidden flex items-center gap-2 mb-6 font-bold text-xl tracking-tight">
+              <Activity className="h-6 w-6" style={{ color: PROFIT }} />
+              TradeDash
+            </div>
+
+            <header>
+              <h1 className="text-3xl font-bold tracking-tight">
+                {step === 'account' && 'Create your account'}
+                {step === 'personal' && 'A bit about you'}
+                {step === 'investor' && 'Your investor profile'}
+                {step === 'bank' && 'Link your first bank'}
+                {step === 'deposit' && 'Make your first deposit'}
+                {step === 'card' && 'Get your debit card'}
+              </h1>
+              <p className="text-sm text-muted-foreground mt-1.5">
+                {step === 'account' && 'Email + password. We send confirmations and login codes here.'}
+                {step === 'personal' && 'Required for account verification. You must be 18 or older to use TradeDash.'}
+                {step === 'investor' && 'Helps us tailor your dashboard. You can change these any time in Settings.'}
+                {step === 'bank' && 'Connect a bank to fund your wallet. You can skip and link one later.'}
+                {step === 'deposit' && 'Pull cash from your linked bank into your wallet — no minimum.'}
+                {step === 'card' && 'Issue your virtual debit card. Spend your wallet anywhere cards are accepted.'}
+              </p>
+            </header>
+
+            {/* Fixed min height so the panel doesn't jump between short and tall steps */}
+            <div className="mt-6 flex-1 min-h-[420px] flex flex-col">
 
       {step === 'account' && (
-        <form onSubmit={submitAccount} className="space-y-5">
+        <form onSubmit={submitAccount} className="flex-1 flex flex-col space-y-5">
           <Field label="Email">
             <Input
               type="email"
@@ -400,6 +432,7 @@ export default function SignupPage() {
               required
               autoComplete="email"
               autoFocus
+              className="h-12"
             />
           </Field>
 
@@ -413,13 +446,13 @@ export default function SignupPage() {
                 onChange={e => setPassword(e.target.value)}
                 required
                 autoComplete="new-password"
-                className="pr-10"
+                className="h-12 pr-12"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(s => !s)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors"
               >
                 {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
               </button>
@@ -444,24 +477,19 @@ export default function SignupPage() {
             )}
           </Field>
 
-          {err && <p className="text-sm font-medium text-rose-500">{err}</p>}
-          {info && <p className="text-sm font-medium text-emerald-500">{info}</p>}
+          <div className="mt-auto pt-6 space-y-3">
+            {err && <p className="text-sm font-medium text-rose-500">{err}</p>}
+            {info && <p className="text-sm font-medium text-emerald-500">{info}</p>}
 
-          <Button
-            type="submit"
-            disabled={!accountValid || submitting}
-            className="w-full font-bold gap-1.5"
-            style={accountValid ? { backgroundColor: PROFIT, color: '#000' } : undefined}
-          >
-            {submitting ? 'Creating account…' : 'Continue'} <ArrowRight className="h-4 w-4" />
-          </Button>
-
-          <p className="text-sm text-muted-foreground text-center">
-            Already have an account?{" "}
-            <Link href="/login" className="font-semibold text-foreground hover:underline">
-              Sign in
-            </Link>
-          </p>
+            <Button
+              type="submit"
+              disabled={!accountValid || submitting}
+              className="w-full h-12 font-bold gap-1.5"
+              style={accountValid ? { backgroundColor: PROFIT, color: '#000' } : undefined}
+            >
+              {submitting ? 'Creating account…' : 'Continue'} <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
         </form>
       )}
 
@@ -472,7 +500,7 @@ export default function SignupPage() {
             if (personalValid) setStep('investor');
             else setPersonalAttempted(true);
           }}
-          className="space-y-5"
+          className="flex-1 flex flex-col space-y-5"
         >
           <div className="grid grid-cols-2 gap-3">
             <Field label="First name">
@@ -485,7 +513,7 @@ export default function SignupPage() {
                 autoComplete="given-name"
                 autoFocus
                 aria-invalid={personalAttempted && !firstNameValid}
-                className={personalAttempted && !firstNameValid ? "border-rose-500" : undefined}
+                className={personalAttempted && !firstNameValid ? "h-12 border-rose-500" : "h-12"}
               />
               {personalAttempted && !firstNameValid && (
                 <p className="text-xs font-medium text-rose-500 mt-1">First name is required.</p>
@@ -500,7 +528,7 @@ export default function SignupPage() {
                 maxLength={40}
                 autoComplete="family-name"
                 aria-invalid={personalAttempted && !lastNameValid}
-                className={personalAttempted && !lastNameValid ? "border-rose-500" : undefined}
+                className={personalAttempted && !lastNameValid ? "h-12 border-rose-500" : "h-12"}
               />
               {personalAttempted && !lastNameValid && (
                 <p className="text-xs font-medium text-rose-500 mt-1">Last name is required.</p>
@@ -516,7 +544,7 @@ export default function SignupPage() {
               max={maxDobForAge18()}
               required
               aria-invalid={personalAttempted && !dobValid}
-              className={personalAttempted && !dobValid ? "border-rose-500" : undefined}
+              className={personalAttempted && !dobValid ? "h-12 border-rose-500" : "h-12"}
             />
             {personalAttempted && !dobValid ? (
               <p className="text-xs font-medium text-rose-500 mt-1">
@@ -533,7 +561,7 @@ export default function SignupPage() {
             <select
               value={country}
               onChange={e => setCountry(e.target.value)}
-              className={`flex h-9 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
+              className={`flex h-12 w-full rounded-md border bg-background px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring ${
                 personalAttempted && !countryValid ? "border-rose-500" : "border-input"
               }`}
               aria-invalid={personalAttempted && !countryValid}
@@ -560,7 +588,7 @@ export default function SignupPage() {
       )}
 
       {step === 'investor' && (
-        <div className="space-y-7">
+        <div className="flex-1 flex flex-col space-y-7">
           {/* Experience */}
           <div className="space-y-3">
             <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
@@ -661,7 +689,7 @@ export default function SignupPage() {
       )}
 
       {step === 'bank' && (
-        <div className="space-y-5">
+        <div className="flex-1 flex flex-col space-y-5">
           <div className="space-y-2">
             {DEMO_BANKS.map(bank => {
               const linking = linkingBank === bank.nickname;
@@ -709,12 +737,12 @@ export default function SignupPage() {
 
           {err && <p className="text-sm font-medium text-rose-500">{err}</p>}
 
-          <div className="flex items-center justify-between pt-1">
+          <div className="mt-auto flex items-center justify-between pt-4">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setStep('card')}
-              className="gap-1.5"
+              className="h-12 gap-1.5"
               disabled={linkingBank !== null}
             >
               Skip for now
@@ -723,7 +751,7 @@ export default function SignupPage() {
               <Button
                 type="button"
                 onClick={() => setStep('deposit')}
-                className="font-bold gap-1.5"
+                className="h-12 font-bold gap-1.5"
                 style={{ backgroundColor: PROFIT, color: '#000' }}
               >
                 Continue <ArrowRight className="h-4 w-4" />
@@ -734,7 +762,7 @@ export default function SignupPage() {
       )}
 
       {step === 'deposit' && (
-        <div className="space-y-5">
+        <div className="flex-1 flex flex-col space-y-5">
           <div className="rounded-lg border border-border/50 bg-foreground/[0.02] p-3 flex items-center gap-3">
             <span className="h-8 w-8 rounded-full bg-foreground/5 flex items-center justify-center shrink-0 text-muted-foreground">
               <Building2 className="h-4 w-4" />
@@ -790,12 +818,12 @@ export default function SignupPage() {
 
           {err && <p className="text-sm font-medium text-rose-500">{err}</p>}
 
-          <div className="flex items-center justify-between pt-1">
+          <div className="mt-auto flex items-center justify-between pt-4">
             <Button
               type="button"
               variant="ghost"
               onClick={() => setStep('card')}
-              className="gap-1.5"
+              className="h-12 gap-1.5"
               disabled={submitting}
             >
               Skip for now
@@ -804,7 +832,7 @@ export default function SignupPage() {
               type="button"
               onClick={submitDeposit}
               disabled={submitting || !linkedBank || !(Number(depositAmountStr) > 0)}
-              className="font-bold gap-1.5"
+              className="h-12 font-bold gap-1.5"
               style={Number(depositAmountStr) > 0 && linkedBank
                 ? { backgroundColor: PROFIT, color: '#000' }
                 : undefined}
@@ -820,7 +848,7 @@ export default function SignupPage() {
       )}
 
       {step === 'card' && (
-        <div className="space-y-5">
+        <div className="flex-1 flex flex-col space-y-5">
           <div
             className="relative w-full aspect-[1.586/1] max-w-sm mx-auto rounded-2xl p-6 text-white shadow-2xl overflow-hidden"
             style={{
@@ -868,12 +896,12 @@ export default function SignupPage() {
 
           {err && <p className="text-sm font-medium text-rose-500">{err}</p>}
 
-          <div className="flex items-center justify-between pt-1">
+          <div className="mt-auto flex items-center justify-between pt-4">
             <Button
               type="button"
               variant="ghost"
               onClick={goToDashboard}
-              className="gap-1.5"
+              className="h-12 gap-1.5"
               disabled={submitting}
             >
               Skip for now
@@ -882,7 +910,7 @@ export default function SignupPage() {
               type="button"
               onClick={submitIssueCard}
               disabled={submitting}
-              className="font-bold gap-1.5"
+              className="h-12 font-bold gap-1.5"
               style={{ backgroundColor: PROFIT, color: '#000' }}
             >
               {submitting ? 'Issuing card…' : (
@@ -895,7 +923,21 @@ export default function SignupPage() {
           </div>
         </div>
       )}
-    </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Persistent footer — stays put across every step */}
+        <div className="border-t border-border/40 px-6 py-4">
+          <p className="text-sm text-muted-foreground text-center">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-foreground hover:underline">
+              Sign in
+            </Link>
+          </p>
+        </div>
+      </div>
+    </main>
   );
 }
 
@@ -959,15 +1001,15 @@ function NavRow({
   nextIcon?: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 pt-1">
-      <Button type="button" variant="ghost" onClick={onBack} className="gap-1.5">
+    <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+      <Button type="button" variant="ghost" onClick={onBack} className="h-12 gap-1.5">
         <ArrowLeft className="h-4 w-4" /> Back
       </Button>
       <Button
         type={onNext ? 'button' : 'submit'}
         onClick={onNext}
         disabled={disabledNext}
-        className="font-bold gap-1.5"
+        className="h-12 font-bold gap-1.5"
         style={!disabledNext ? { backgroundColor: PROFIT, color: '#000' } : undefined}
       >
         {nextLabel} {nextIcon ?? <ArrowRight className="h-4 w-4" />}

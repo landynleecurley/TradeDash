@@ -104,7 +104,7 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
 
   return (
     <section
-      className="rounded-xl border p-5 space-y-4 relative overflow-hidden"
+      className="rounded-xl border p-4 sm:p-5 space-y-4 relative overflow-hidden"
       style={{
         borderColor: `var(--brand-40)`,
         background: `linear-gradient(135deg, var(--brand-06) 0%, transparent 60%)`,
@@ -130,7 +130,7 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
             type="button"
             onClick={() => setCollapsed(c => !c)}
             aria-label={collapsed ? 'Expand checklist' : 'Collapse checklist'}
-            className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+            className="h-11 w-11 sm:h-9 sm:w-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5"
           >
             {collapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
           </button>
@@ -138,7 +138,7 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
             type="button"
             onClick={dismiss}
             aria-label="Dismiss"
-            className="h-7 w-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5"
+            className="h-11 w-11 sm:h-9 sm:w-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5"
           >
             <X className="h-4 w-4" />
           </button>
@@ -161,35 +161,37 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
           {steps.map((step, i) => (
             <li
               key={step.key}
-              className={`rounded-lg border p-3.5 flex items-center gap-3 transition-colors ${
+              className={`rounded-lg border p-3.5 flex flex-col gap-3 sm:flex-row sm:items-center transition-colors ${
                 step.done
                   ? 'border-border/40 bg-foreground/[0.02]'
                   : 'border-border/50 hover:border-border'
               }`}
             >
-              <div
-                className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
-                style={{
-                  backgroundColor: step.done ? `var(--brand-1a)` : 'var(--muted)',
-                  color: step.done ? PROFIT : 'var(--muted-foreground)',
-                }}
-              >
-                {step.done ? <Check className="h-4 w-4" /> : step.icon}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p
-                  className={`text-sm font-bold tracking-tight ${
-                    step.done ? 'text-muted-foreground line-through decoration-muted-foreground/50' : ''
-                  }`}
+              <div className="flex items-center gap-3 min-w-0 sm:flex-1">
+                <div
+                  className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
+                  style={{
+                    backgroundColor: step.done ? `var(--brand-1a)` : 'var(--muted)',
+                    color: step.done ? PROFIT : 'var(--muted-foreground)',
+                  }}
                 >
-                  <span className="text-muted-foreground/60 mr-1.5 font-mono text-xs">
-                    {String(i + 1).padStart(2, '0')}
-                  </span>
-                  {step.title}
-                </p>
-                {!step.done && (
-                  <p className="text-xs text-muted-foreground mt-0.5">{step.detail}</p>
-                )}
+                  {step.done ? <Check className="h-4 w-4" /> : step.icon}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-sm font-bold tracking-tight ${
+                      step.done ? 'text-muted-foreground line-through decoration-muted-foreground/50' : ''
+                    }`}
+                  >
+                    <span className="text-muted-foreground/60 mr-1.5 font-mono text-xs">
+                      {String(i + 1).padStart(2, '0')}
+                    </span>
+                    {step.title}
+                  </p>
+                  {!step.done && (
+                    <p className="text-xs text-muted-foreground mt-0.5">{step.detail}</p>
+                  )}
+                </div>
               </div>
               {!step.done && (
                 step.cta.href ? (
@@ -197,7 +199,7 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
                     render={<Link href={step.cta.href} />}
                     nativeButton={false}
                     size="sm"
-                    className="font-bold gap-1 shrink-0"
+                    className="font-bold gap-1 w-full sm:w-auto h-11 sm:h-7 shrink-0"
                     style={{ backgroundColor: PROFIT, color: '#000' }}
                   >
                     {step.cta.label} <ArrowRight className="h-3 w-3" />
@@ -207,7 +209,7 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
                     type="button"
                     size="sm"
                     onClick={step.cta.onClick}
-                    className="font-bold gap-1 shrink-0"
+                    className="font-bold gap-1 w-full sm:w-auto h-11 sm:h-7 shrink-0"
                     style={{ backgroundColor: PROFIT, color: '#000' }}
                   >
                     {step.cta.label} <ArrowRight className="h-3 w-3" />

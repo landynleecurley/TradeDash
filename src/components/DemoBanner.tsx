@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Sparkles, ArrowRight, X } from "lucide-react";
 import { useGlobalStockData } from "@/components/StockDataProvider";
 import { SaveProgressModal } from "@/components/SaveProgressModal";
@@ -20,8 +20,30 @@ export function DemoBanner() {
     if (typeof window === "undefined") return false;
     return window.sessionStorage.getItem(STORAGE_KEY) === "1";
   });
+  const bannerRef = useRef<HTMLDivElement>(null);
+  const showBanner = isReady && isAnonymous && !dismissed;
 
-  if (!isReady || !isAnonymous || dismissed) {
+  // Publish the banner's height as a global CSS var so every sticky page
+  // header can pin directly beneath it (top-[var(--demo-banner-h)]) and the
+  // two scroll as one block. Falls back to 0px whenever the banner is hidden.
+  useEffect(() => {
+    const root = document.documentElement;
+    const el = bannerRef.current;
+    if (!showBanner || !el) {
+      root.style.setProperty("--demo-banner-h", "0px");
+      return;
+    }
+    const measure = () => root.style.setProperty("--demo-banner-h", `${el.offsetHeight}px`);
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.setProperty("--demo-banner-h", "0px");
+    };
+  }, [showBanner]);
+
+  if (!showBanner) {
     // Mount the modal anyway so the conversion flow works for users on
     // pages that don't render the banner (e.g., dismissed state).
     return (
@@ -39,10 +61,11 @@ export function DemoBanner() {
   return (
     <>
       <div
+        ref={bannerRef}
         role="status"
-        className="sticky top-0 z-30 flex items-center gap-3 px-4 py-2 border-b text-xs"
+        className="sticky top-0 z-30 flex items-center gap-3 px-4 py-2 border-b text-xs bg-background/90 backdrop-blur-xl"
         style={{
-          background: 'linear-gradient(90deg, var(--brand-1a) 0%, var(--brand-08) 50%, var(--brand-1a) 100%)',
+          backgroundImage: 'linear-gradient(90deg, var(--brand-1a) 0%, var(--brand-08) 50%, var(--brand-1a) 100%)',
           borderColor: 'var(--brand-30)',
         }}
       >
@@ -55,7 +78,7 @@ export function DemoBanner() {
           <span className="font-bold uppercase tracking-widest text-[10px] mr-2" style={{ color: 'var(--brand)' }}>
             Demo mode
           </span>
-          <span className="text-foreground">You&rsquo;re using a sandbox account.</span>
+          <span className="text-foreground hidden sm:inline">You&rsquo;re using a sandbox account.</span>
           <span className="text-muted-foreground hidden sm:inline">
             {" "}Sign up to save your portfolio, alerts, and gold benefits.
           </span>

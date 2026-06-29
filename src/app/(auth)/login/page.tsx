@@ -6,7 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
+import { AuthBrandPanel } from "@/components/AuthBrandPanel";
+import { Activity, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
 
 const PROFIT = "var(--brand)";
 
@@ -21,7 +22,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState(false);
 
-  const valid = email.includes('@') && password.length > 0;
+  const valid = email.includes("@") && password.length > 0;
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,13 +55,13 @@ function LoginForm() {
       const { error } = await supabase.auth.signInAnonymously();
       if (error) {
         setErr(
-          error.message.includes('disabled') || error.message.includes('not enabled')
+          error.message.includes("disabled") || error.message.includes("not enabled")
             ? "Demo mode isn't enabled on this Supabase project. Toggle Authentication → Sign In Providers → Allow anonymous sign-ins."
             : error.message,
         );
         return;
       }
-      router.replace('/');
+      router.replace("/");
       router.refresh();
     } finally {
       setDemoLoading(false);
@@ -69,12 +70,15 @@ function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="w-full max-w-md space-y-6">
+      {/* Logo — shown here only on mobile, where the brand panel is hidden */}
+      <div className="md:hidden flex items-center gap-2 font-bold text-xl tracking-tight">
+        <Activity className="h-6 w-6" style={{ color: PROFIT }} />
+        TradeDash
+      </div>
+
       <header>
-        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Welcome back</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Welcome back</p>
         <h1 className="text-3xl font-bold tracking-tight mt-1">Sign in to TradeDash</h1>
-        <p className="text-sm text-muted-foreground mt-1.5">
-          Use the email and password you signed up with.
-        </p>
       </header>
 
       <div className="space-y-4">
@@ -87,30 +91,40 @@ function LoginForm() {
             required
             autoComplete="email"
             autoFocus
+            className="h-12"
           />
         </Field>
 
         <Field label="Password">
           <div className="relative">
             <Input
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               placeholder="Your password"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="pr-10"
+              className="h-12 pr-12"
             />
             <button
               type="button"
               onClick={() => setShowPassword(s => !s)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              className="absolute right-2 top-1/2 -translate-y-1/2 h-9 w-9 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-foreground/5 transition-colors"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
           </div>
         </Field>
+
+        <div className="flex justify-end">
+          <Link
+            href="/forgot-password"
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            Forgot password?
+          </Link>
+        </div>
       </div>
 
       {err && <p className="text-sm font-medium text-rose-500">{err}</p>}
@@ -118,8 +132,8 @@ function LoginForm() {
       <Button
         type="submit"
         disabled={!valid || loading}
-        className="w-full font-bold gap-1.5"
-        style={valid ? { backgroundColor: PROFIT, color: '#000' } : undefined}
+        className="w-full h-12 font-bold gap-1.5"
+        style={{ backgroundColor: PROFIT, color: "#000" }}
       >
         {loading ? "Signing in…" : "Sign in"} <ArrowRight className="h-4 w-4" />
       </Button>
@@ -140,7 +154,8 @@ function LoginForm() {
         variant="outline"
         onClick={onTryDemo}
         disabled={demoLoading || loading}
-        className="w-full font-bold gap-1.5"
+        className="w-full h-12 font-bold gap-1.5"
+        style={{ borderColor: "var(--brand)" }}
       >
         <Sparkles className="h-4 w-4" style={{ color: PROFIT }} />
         {demoLoading ? "Loading demo…" : "Try the demo · no signup needed"}
@@ -167,8 +182,13 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="w-full max-w-md" />}>
-      <LoginForm />
-    </Suspense>
+    <main className="min-h-screen flex bg-background">
+      <AuthBrandPanel />
+      <div className="w-full md:w-1/2 flex items-center justify-center px-6 py-12 bg-background">
+        <Suspense fallback={<div className="w-full max-w-md" />}>
+          <LoginForm />
+        </Suspense>
+      </div>
+    </main>
   );
 }

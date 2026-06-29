@@ -12,7 +12,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <ThemeProvider>
         <SidebarProvider>
           <AppSidebar />
-          <div className="flex flex-col flex-1 min-w-0 pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
+          <div className="flex flex-col flex-1 min-w-0 pb-[calc(5rem+env(safe-area-inset-bottom))] lg:pb-0">
             <DemoBanner />
             {children}
           </div>

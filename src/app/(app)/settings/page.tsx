@@ -208,7 +208,7 @@ export default function SettingsPage() {
 
   return (
     <div className="flex flex-col flex-1 w-full bg-background">
-      <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
+      <header className="sticky top-[var(--demo-banner-h,0px)] z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
         <SearchBar className="w-full max-w-sm shrink" />
         <TopNav className="hidden lg:flex shrink-0" />
         <NotificationsBell className="ml-auto" />

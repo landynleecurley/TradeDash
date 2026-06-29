@@ -1,7 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-const PUBLIC_PATHS = ['/login', '/signup'];
+const PUBLIC_PATHS = ['/login', '/signup', '/forgot-password', '/reset-password'];
 
 function isPublicPath(path: string) {
   return PUBLIC_PATHS.some(p => path === p || path.startsWith(`${p}/`));
@@ -57,7 +57,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(redirectUrl);
   }
 
-  if (user && isPublic) {
+  // Don't bounce an authenticated user off /reset-password — a recovery link
+  // signs them in precisely so they can set a new password here.
+  if (user && isPublic && path !== '/reset-password') {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = request.nextUrl.searchParams.get('next') || '/';
     redirectUrl.search = '';
