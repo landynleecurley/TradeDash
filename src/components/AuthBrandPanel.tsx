@@ -15,6 +15,22 @@ const TICKERS = [
 const DEFAULT_SUBTITLE =
   "One account for your portfolio, your wallet, and the card that spends it.";
 
+/** TradeDash logo + "by Landyn Curley" byline. Shared by the brand panel and
+ *  the mobile auth headers so the attribution stays consistent. */
+export function AuthWordmark({ className }: { className?: string }) {
+  return (
+    <div className={className}>
+      <div className="flex items-center gap-2 font-bold text-xl tracking-tight">
+        <Activity className="h-6 w-6" style={{ color: PROFIT }} />
+        TradeDash
+      </div>
+      <p className="mt-1 text-xs font-medium tracking-wide text-muted-foreground">
+        by Landyn Curley
+      </p>
+    </div>
+  );
+}
+
 /**
  * Shared left-hand brand panel for the auth routes (login / signup / reset).
  * Hidden on mobile (md:flex). The headline and tickers stay constant; only the
@@ -43,11 +59,8 @@ export function AuthBrandPanel({ subtitle = DEFAULT_SUBTITLE }: { subtitle?: str
         }}
       />
 
-      {/* Logo */}
-      <div className="relative flex items-center gap-2 font-bold text-xl tracking-tight">
-        <Activity className="h-6 w-6" style={{ color: PROFIT }} />
-        TradeDash
-      </div>
+      {/* Logo + byline */}
+      <AuthWordmark className="relative" />
 
       {/* Headline + subtitle + ticker rows */}
       <div className="relative max-w-md">

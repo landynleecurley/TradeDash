@@ -6,8 +6,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase-browser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AuthBrandPanel } from "@/components/AuthBrandPanel";
-import { Activity, ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
+import { AuthBrandPanel, AuthWordmark } from "@/components/AuthBrandPanel";
+import { ArrowRight, Eye, EyeOff, Sparkles } from "lucide-react";
 
 const PROFIT = "var(--brand)";
 
@@ -70,11 +70,8 @@ function LoginForm() {
 
   return (
     <form onSubmit={onSubmit} className="w-full max-w-md space-y-6">
-      {/* Logo — shown here only on mobile, where the brand panel is hidden */}
-      <div className="md:hidden flex items-center gap-2 font-bold text-xl tracking-tight">
-        <Activity className="h-6 w-6" style={{ color: PROFIT }} />
-        TradeDash
-      </div>
+      {/* Logo + byline — shown here only on mobile (brand panel is hidden) */}
+      <AuthWordmark className="md:hidden" />
 
       <header>
         <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Welcome back</p>

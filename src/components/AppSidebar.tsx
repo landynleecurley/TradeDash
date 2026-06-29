@@ -94,6 +94,9 @@ export function AppSidebar() {
             <Activity className="h-5 w-5" style={{ color: PROFIT }} />
             TradeDash
           </div>
+          <p className="mt-0.5 pl-7 text-[11px] font-medium tracking-wide text-muted-foreground group-data-[collapsible=icon]:hidden">
+            by Landyn Curley
+          </p>
         </SidebarHeader>
       </Sidebar>
     );
@@ -106,6 +109,9 @@ export function AppSidebar() {
           <Activity className="h-5 w-5" style={{ color: PROFIT }} />
           TradeDash
         </Link>
+        <p className="mt-0.5 pl-7 text-[11px] font-medium tracking-wide text-muted-foreground group-data-[collapsible=icon]:hidden">
+          by Landyn Curley
+        </p>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>

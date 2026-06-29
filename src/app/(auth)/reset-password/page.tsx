@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase-browser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AuthBrandPanel } from "@/components/AuthBrandPanel";
+import { AuthBrandPanel, AuthWordmark } from "@/components/AuthBrandPanel";
 import { Activity, ArrowRight, Eye, EyeOff } from "lucide-react";
 
 const PROFIT = "var(--brand)";
@@ -102,11 +102,8 @@ export default function ResetPasswordPage() {
 
       <div className="w-full md:w-1/2 flex items-center justify-center px-6 py-12 bg-background">
         <div className="w-full max-w-md space-y-6">
-          {/* Logo — mobile only (brand panel is hidden below md) */}
-          <div className="md:hidden flex items-center gap-2 font-bold text-xl tracking-tight">
-            <Activity className="h-6 w-6" style={{ color: PROFIT }} />
-            TradeDash
-          </div>
+          {/* Logo + byline — mobile only (brand panel is hidden below md) */}
+          <AuthWordmark className="md:hidden" />
 
           {status === "loading" && (
             <div className="flex items-center gap-3 text-sm text-muted-foreground" role="status">

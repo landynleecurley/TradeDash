@@ -7,9 +7,9 @@ import { toast } from "sonner";
 import { createClient } from "@/lib/supabase-browser";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AuthBrandPanel } from "@/components/AuthBrandPanel";
+import { AuthBrandPanel, AuthWordmark } from "@/components/AuthBrandPanel";
 import {
-  Activity, ArrowLeft, ArrowRight, Eye, EyeOff, Sparkles, GraduationCap, Briefcase,
+  ArrowLeft, ArrowRight, Eye, EyeOff, Sparkles, GraduationCap, Briefcase,
   TrendingUp, Wallet, ShieldCheck, Scale, Rocket, Building2, CreditCard, Check,
 } from "lucide-react";
 import {
@@ -393,11 +393,8 @@ export default function SignupPage() {
         {/* Step content area */}
         <div className="flex-1 flex justify-center px-6 py-8">
           <div className="w-full max-w-md flex flex-col">
-            {/* Logo — mobile only (brand panel is hidden below md) */}
-            <div className="md:hidden flex items-center gap-2 mb-6 font-bold text-xl tracking-tight">
-              <Activity className="h-6 w-6" style={{ color: PROFIT }} />
-              TradeDash
-            </div>
+            {/* Logo + byline — mobile only (brand panel is hidden below md) */}
+            <AuthWordmark className="md:hidden mb-6" />
 
             <header>
               <h1 className="text-3xl font-bold tracking-tight">
