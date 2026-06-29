@@ -17,12 +17,17 @@ type Side = "top" | "bottom" | "left" | "right";
 export function InfoHint({
   label,
   side = "top",
+  size = "md",
   className,
 }: {
   label: string;
   side?: Side;
+  /** "sm" tracks tiny (text-[10px]) labels; "md" suits body text and headings. */
+  size?: "sm" | "md";
   className?: string;
 }) {
+  const box = size === "sm" ? "size-4" : "size-5";
+  const glyph = size === "sm" ? "size-3" : "size-3.5";
   return (
     <Popover.Root>
       <Popover.Trigger
@@ -30,11 +35,12 @@ export function InfoHint({
         delay={120}
         aria-label={label}
         className={cn(
-          "inline-flex size-5 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          "inline-flex shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+          box,
           className,
         )}
       >
-        <Info className="size-3.5" />
+        <Info className={glyph} />
       </Popover.Trigger>
       <Popover.Portal>
         <Popover.Positioner side={side} sideOffset={6} className="z-50">

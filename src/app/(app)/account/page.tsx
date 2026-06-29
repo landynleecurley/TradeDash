@@ -14,6 +14,7 @@ import {
   formatSignedPercent,
 } from "@/components/ui/AnimatedNumber";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
+import { InfoHint } from "@/components/ui/InfoHint";
 import { CreditCard, Crown, ScrollText, Settings, Wallet } from "lucide-react";
 
 const PROFIT = "var(--brand)";
@@ -41,7 +42,6 @@ export default function AccountPage() {
     displayName,
     email,
     isReady,
-    totalPortfolioValue,
     totalGain,
     totalGainPercent,
     dayChange,
@@ -224,7 +224,7 @@ export default function AccountPage() {
 
         {/* Cards grid */}
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <Card title="Buying Power" emphasis="Available to invest or spend">
+          <Card title="Buying Power" info="Available to invest or spend. Cash earns 0% APY until live banking is wired up.">
             {isReady ? (
               <AnimatedNumber
                 value={cashBalance}
@@ -232,13 +232,12 @@ export default function AccountPage() {
                 className="font-mono font-bold text-2xl tracking-tight tabular-nums"
               />
             ) : <Skeleton className="h-7 w-24" />}
-            <Hint>{cashBalance <= 0 ? 'Deposit cash to start trading.' : 'Cash earns 0% APY until live banking is wired up.'}</Hint>
             <Link href="/wallet" className="inline-block text-xs font-bold uppercase tracking-widest mt-2 hover:underline" style={{ color: PROFIT }}>
               Manage cash →
             </Link>
           </Card>
 
-          <Card title="Total Return" emphasis="All-time P&L">
+          <Card title="Total Return" info="All-time profit & loss — your portfolio value versus cost basis.">
             {isReady ? (
               <>
                 <AnimatedNumber
@@ -255,10 +254,9 @@ export default function AccountPage() {
                 />
               </>
             ) : <Skeleton className="h-7 w-24" />}
-            <Hint>Portfolio value vs cost basis.</Hint>
           </Card>
 
-          <Card title="Today's P&L" emphasis="Since previous close">
+          <Card title="Today's P&L" info="Change since the previous close. Positions opened today are basis-adjusted.">
             {isReady ? (
               <>
                 <AnimatedNumber
@@ -275,15 +273,14 @@ export default function AccountPage() {
                 />
               </>
             ) : <Skeleton className="h-7 w-24" />}
-            <Hint>Positions opened today are basis-adjusted.</Hint>
           </Card>
 
-          <Card title="Active Positions" emphasis="Symbols with shares > 0">
+          <Card title="Active Positions" info="Symbols you currently hold shares in.">
             <Big>{isReady ? String(stats.positionsHeld) : null}</Big>
             <Hint>Out of {stocks.length} on your watchlist.</Hint>
           </Card>
 
-          <Card title="Debit Card" emphasis="Virtual">
+          <Card title="Debit Card" info="Your virtual debit card, tied to your wallet balance.">
             {isReady ? (
               card ? (
                 <>
@@ -295,10 +292,7 @@ export default function AccountPage() {
                   </p>
                 </>
               ) : (
-                <>
-                  <Big>—</Big>
-                  <Hint>No card issued yet.</Hint>
-                </>
+                <Big>—</Big>
               )
             ) : <Skeleton className="h-7 w-32" />}
             <Link href="/wallet" className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest mt-2 hover:underline" style={{ color: PROFIT }}>
@@ -307,22 +301,21 @@ export default function AccountPage() {
             </Link>
           </Card>
 
-          <Card title="Lifetime Deposits" emphasis="Cash you've added">
+          <Card title="Lifetime Deposits" info="Total cash you've added to your wallet over time.">
             <Big>{isReady ? `$${stats.totalDeposited.toFixed(2)}` : null}</Big>
             <Hint>Lifetime withdrawals: ${stats.totalWithdrawn.toFixed(2)}</Hint>
           </Card>
 
-          <Card title="Card Spending" emphasis="Lifetime virtual purchases">
+          <Card title="Card Spending" info="Lifetime virtual purchases.">
             <Big>{isReady ? `$${stats.totalCardSpend.toFixed(2)}` : null}</Big>
-            <Hint>Spend with your card from the wallet.</Hint>
           </Card>
 
-          <Card title="Day Trades" emphasis="0 of unlimited">
+          <Card title="Day Trades" info="Virtual trading isn't flagged for pattern-day-trader (PDT) rules.">
             <Big>0</Big>
-            <Hint>Virtual trading isn&apos;t flagged for PDT rules.</Hint>
+            <Hint>of unlimited</Hint>
           </Card>
 
-          <Card title="TradeDash Gold" emphasis={isGoldActive ? `${membership?.plan ?? ''} plan` : "Premium membership"}>
+          <Card title="TradeDash Gold" info="Premium membership — the gold card plus member perks for $5/mo.">
             {isReady ? (
               isGoldActive ? (
                 <>
@@ -336,10 +329,7 @@ export default function AccountPage() {
                   </Hint>
                 </>
               ) : (
-                <>
-                  <Big>—</Big>
-                  <Hint>Unlock the gold card and member perks for $5/mo.</Hint>
-                </>
+                <Big>—</Big>
               )
             ) : <Skeleton className="h-7 w-24" />}
             <Link href="/gold" className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest mt-2 hover:underline" style={{ color: '#E8B530' }}>
@@ -348,10 +338,8 @@ export default function AccountPage() {
             </Link>
           </Card>
 
-          <Card title="Margin Investing" emphasis="Disabled">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              All trades are cash-only. Margin requires real broker integration, which TradeDash doesn&apos;t simulate.
-            </p>
+          <Card title="Margin Investing" info="All trades are cash-only. Margin requires real broker integration, which TradeDash doesn't simulate.">
+            <Big color="var(--muted-foreground)">Disabled</Big>
           </Card>
         </section>
 
@@ -383,11 +371,13 @@ function NavTab({ href, active, children }: { href: string; active?: boolean; ch
   );
 }
 
-function Card({ title, emphasis, children }: { title: string; emphasis?: string; children: React.ReactNode }) {
+function Card({ title, info, children }: { title: string; info?: string; children: React.ReactNode }) {
   return (
     <div className="rounded-lg border border-border/40 p-4 space-y-1 bg-foreground/[0.01]">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
-      {emphasis && <p className="text-xs text-muted-foreground">{emphasis}</p>}
+      <div className="flex items-center gap-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
+        {info && <InfoHint label={info} side="top" size="sm" />}
+      </div>
       <div className="pt-2">{children}</div>
     </div>
   );
@@ -557,11 +547,13 @@ function PnLStat({ label, detail, value }: { label: string; detail: string; valu
   const positive = value >= 0;
   return (
     <div className="rounded-lg border border-border/40 p-4">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+      <div className="flex items-center gap-1.5">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
+        <InfoHint label={detail} side="top" size="sm" />
+      </div>
       <p className="font-mono font-bold text-2xl tracking-tight mt-2" style={{ color: positive ? PROFIT : LOSS }}>
         {positive ? '+' : '-'}${Math.abs(value).toFixed(2)}
       </p>
-      <p className="text-xs text-muted-foreground mt-1">{detail}</p>
     </div>
   );
 }
