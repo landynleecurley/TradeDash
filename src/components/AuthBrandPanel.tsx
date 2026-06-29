@@ -60,7 +60,10 @@ export function AuthBrandPanel({ subtitle = DEFAULT_SUBTITLE }: { subtitle?: str
           {subtitle}
         </p>
 
-        <div className="mt-8 rounded-xl border border-border/40 divide-y divide-border/40 overflow-hidden bg-background/40 backdrop-blur-sm">
+        <div
+          aria-hidden="true"
+          className="mt-8 rounded-xl border border-border/40 divide-y divide-border/40 overflow-hidden bg-background/40 backdrop-blur-sm"
+        >
           {TICKERS.map(t => {
             const positive = t.change >= 0;
             return (

@@ -28,32 +28,45 @@ export default function ResetPasswordPage() {
   // event — we accept either PKCE (SIGNED_IN) or implicit (PASSWORD_RECOVERY).
   // If no session ever materializes, the link was bad or expired.
   useEffect(() => {
-    const supabase = createClient();
+    // Read the recovery markers BEFORE creating the client — detectSessionInUrl
+    // consumes and strips the URL params the moment the client is instantiated.
+    const url = new URL(window.location.href);
+    const hashParams = new URLSearchParams(url.hash.replace(/^#/, ""));
+    const hasError = url.searchParams.has("error") || url.searchParams.has("error_code");
+    const isRecovery = url.searchParams.has("code") || hashParams.get("type") === "recovery";
+
     let settled = false;
-    const ready = () => {
+    const settle = (next: Status) => {
       if (!settled) {
         settled = true;
-        setStatus("ready");
+        setStatus(next);
       }
     };
 
+    // No recovery token (or an explicit error from Supabase) means this isn't a
+    // valid reset visit — don't show the form just because a normal session
+    // happens to exist. Defer the state update out of the effect body.
+    if (hasError || !isRecovery) {
+      const id = setTimeout(() => settle("invalid"), 0);
+      return () => clearTimeout(id);
+    }
+
+    const supabase = createClient();
+
     const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
       if (session && (event === "PASSWORD_RECOVERY" || event === "SIGNED_IN" || event === "INITIAL_SESSION")) {
-        ready();
+        settle("ready");
       }
     });
 
     // Catch a session that was established before the listener attached.
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) ready();
+      if (data.session) settle("ready");
     });
 
-    const timer = setTimeout(() => {
-      if (!settled) {
-        settled = true;
-        setStatus("invalid");
-      }
-    }, 4000);
+    // Generous timeout so a slow exchange on a mobile network isn't mistaken
+    // for an invalid link.
+    const timer = setTimeout(() => settle("invalid"), 10000);
 
     return () => {
       sub.subscription.unsubscribe();
@@ -96,22 +109,22 @@ export default function ResetPasswordPage() {
           </div>
 
           {status === "loading" && (
-            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="flex items-center gap-3 text-sm text-muted-foreground" role="status">
               <Activity className="h-5 w-5 animate-pulse" style={{ color: PROFIT }} />
               Verifying your reset link…
             </div>
           )}
 
           {status === "invalid" && (
-            <div className="space-y-6">
+            <div className="space-y-6" role="status">
               <header>
                 <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   Reset password
                 </p>
-                <h1 className="text-3xl font-bold tracking-tight mt-1">This link has expired</h1>
+                <h1 className="text-3xl font-bold tracking-tight mt-1">This link didn&rsquo;t work</h1>
                 <p className="text-sm text-muted-foreground mt-1.5">
-                  Password reset links are single-use and expire after an hour. Request a fresh one to
-                  continue.
+                  Reset links are single-use, expire after an hour, and must be opened in the same
+                  browser you requested them from. Request a fresh one to continue.
                 </p>
               </header>
               <Button
