@@ -16,7 +16,7 @@ import { TradeModal } from "@/components/TradeModal";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { PriceAlertModal } from "@/components/PriceAlertModal";
 import { addWatchlist, removeWatchlist, deletePriceAlert } from "@/lib/actions";
-import { getTodaySessionBounds, sessionAt, SESSION_LABEL, formatTimeOfDay } from "@/lib/market-sessions";
+import { getTodaySessionBounds, sessionAt, SESSION_LABEL, formatTimeOfDay, type SessionLabel } from "@/lib/market-sessions";
 import { makeLiveDot } from "@/components/ui/LiveDot";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine } from "recharts";
 import { Activity, ExternalLink, Bell, ArrowUp, ArrowDown, Check, X as XIcon, Crown, Plus } from "lucide-react";
@@ -154,6 +154,9 @@ export function Dashboard({ symbol }: { symbol: string }) {
   const [mounted, setMounted] = useState(false);
   const [marketState, setMarketState] = useState<MarketState>(() => getMarketState(new Date()));
   const [period, setPeriod] = useState<PeriodKey>("1D");
+  // Which session the cursor is over while scrubbing the 1D chart, so we can
+  // focus that band and mute the others.
+  const [hoveredSession, setHoveredSession] = useState<SessionLabel | null>(null);
   const [chartData, setChartData] = useState<ChartPoint[] | null>(null);
   const [chartLoading, setChartLoading] = useState(false);
   const [stockInfo, setStockInfo] = useState<StockInfo | null>(null);
@@ -392,6 +395,23 @@ export function Dashboard({ symbol }: { symbol: string }) {
       })()
     : null;
 
+  // Hover focus: brighten the session band the cursor is over and mute the
+  // others as the user scrubs the 1D chart.
+  const sessionOpacity = (session: 'pre' | 'regular' | 'after') => {
+    const base = session === 'regular' ? 0 : 0.05;
+    if (hoveredSession == null) return base;
+    if (hoveredSession === session) return session === 'regular' ? 0.08 : 0.18;
+    return 0.02;
+  };
+  const sessionLabelOpacity = (session: 'pre' | 'after') =>
+    hoveredSession == null ? 0.7 : hoveredSession === session ? 1 : 0.2;
+  const onChartHover = (state: { activeLabel?: string | number } | undefined) => {
+    const t = state?.activeLabel;
+    // Update only on a valid time; clearing is left to onMouseLeave so a stray
+    // event doesn't drop the focus mid-scrub.
+    if (period === '1D' && typeof t === 'number') setHoveredSession(sessionAt(t));
+  };
+
   const positionValue = selectedStock.price * selectedStock.shares;
   const positionGain = positionValue - selectedStock.costBasisTotal;
   const positionGainPercent = selectedStock.costBasisTotal === 0
@@ -461,7 +481,13 @@ export function Dashboard({ symbol }: { symbol: string }) {
           <div className="h-[260px] sm:h-[360px] -mx-4 sm:-mx-6 md:mx-0" style={{ touchAction: 'pan-y' }}>
             {chartReady ? (
               <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-                <AreaChart data={activeChartData!} margin={{ top: 4, right: 0, left: 0, bottom: 0 }}>
+                <AreaChart
+                  data={activeChartData!}
+                  margin={{ top: 4, right: 0, left: 0, bottom: 0 }}
+                  onMouseMove={onChartHover}
+                  onMouseLeave={() => setHoveredSession(null)}
+                  onTouchMove={onChartHover}
+                >
                   <defs>
                     <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="0%" stopColor={chartAccent} stopOpacity={0.35} />
@@ -479,17 +505,25 @@ export function Dashboard({ symbol }: { symbol: string }) {
                     scale="time"
                   />
 
-                  {/* 1D-only session shading. Pre/after-hours get a tinted
-                       band; the regular-hours range stays unshaded so it
-                       reads as the "main" session. */}
+                  {/* 1D-only session shading. Scrubbing the chart focuses the
+                       band the cursor is over and mutes the others. */}
+                  {sessionBands?.regular && (
+                    <ReferenceArea
+                      x1={sessionBands.regular[0]}
+                      x2={sessionBands.regular[1]}
+                      fill="var(--foreground)"
+                      fillOpacity={sessionOpacity('regular')}
+                      ifOverflow="hidden"
+                    />
+                  )}
                   {sessionBands?.pre && (
                     <ReferenceArea
                       x1={sessionBands.pre[0]}
                       x2={sessionBands.pre[1]}
                       fill={AMBER}
-                      fillOpacity={0.05}
+                      fillOpacity={sessionOpacity('pre')}
                       ifOverflow="hidden"
-                      label={{ value: 'PRE', position: 'insideTopLeft', fontSize: 9, fill: AMBER, fillOpacity: 0.7 }}
+                      label={{ value: 'PRE', position: 'insideTopLeft', fontSize: 9, fill: AMBER, fillOpacity: sessionLabelOpacity('pre') }}
                     />
                   )}
                   {sessionBands?.after && (
@@ -497,9 +531,9 @@ export function Dashboard({ symbol }: { symbol: string }) {
                       x1={sessionBands.after[0]}
                       x2={sessionBands.after[1]}
                       fill={AMBER}
-                      fillOpacity={0.05}
+                      fillOpacity={sessionOpacity('after')}
                       ifOverflow="hidden"
-                      label={{ value: 'AFTER', position: 'insideTopRight', fontSize: 9, fill: AMBER, fillOpacity: 0.7 }}
+                      label={{ value: 'AFTER', position: 'insideTopRight', fontSize: 9, fill: AMBER, fillOpacity: sessionLabelOpacity('after') }}
                     />
                   )}
                   {sessionBands?.openLine != null && (
