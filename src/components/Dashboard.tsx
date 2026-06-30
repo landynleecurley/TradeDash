@@ -19,11 +19,12 @@ import { addWatchlist, removeWatchlist, deletePriceAlert } from "@/lib/actions";
 import { getTodaySessionBounds, sessionAt, SESSION_LABEL, formatTimeOfDay } from "@/lib/market-sessions";
 import { makeLiveDot } from "@/components/ui/LiveDot";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceArea, ReferenceLine } from "recharts";
-import { Activity, ExternalLink, Bell, ArrowUp, ArrowDown, Check, X as XIcon, Crown } from "lucide-react";
+import { Activity, ExternalLink, Bell, ArrowUp, ArrowDown, Check, X as XIcon, Crown, Plus } from "lucide-react";
 import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { cn } from "@/lib/utils";
+import type { StockInfo as WatchlistStock } from "@/lib/useStockData";
 
 type StockInfo = {
   symbol: string;
@@ -160,11 +161,53 @@ export function Dashboard({ symbol }: { symbol: string }) {
   const [removing, setRemoving] = useState(false);
   const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
   const { stocks, isLive, isReady, usingMockData, cashBalance, dayPnLBySymbol, refresh } = useGlobalStockData();
-  // No fallback to stocks[0]: with a per-user watchlist this can be empty,
-  // which would mask "you don't own this symbol" as "you do." Keep undefined
-  // and handle it explicitly below.
-  const selectedStock = stocks.find(s => s.symbol === symbol);
+  const watchlistStock = stocks.find(s => s.symbol === symbol);
+  const inWatchlist = !!watchlistStock;
   const [adding, setAdding] = useState(false);
+
+  // A symbol doesn't need to be on the watchlist to view it. For ones that
+  // aren't, pull a one-off quote so the page still shows live market data.
+  // `quoteState === 'untradable'` means Finnhub has no price (delisted /
+  // unsupported), which is the only case we can't render.
+  const [fetchedStock, setFetchedStock] = useState<WatchlistStock | null>(null);
+  const [quoteState, setQuoteState] = useState<'loading' | 'ok' | 'untradable'>('loading');
+  useEffect(() => {
+    if (!isReady) return;
+    if (inWatchlist) { setFetchedStock(null); setQuoteState('ok'); return; }
+    let cancelled = false;
+    setFetchedStock(null);
+    setQuoteState('loading');
+    (async () => {
+      try {
+        const res = await fetch(`/api/quote?symbol=${encodeURIComponent(symbol)}`);
+        const q = res.ok ? await res.json() : null;
+        if (cancelled) return;
+        if (!q || q.price == null) { setQuoteState('untradable'); return; }
+        setFetchedStock({
+          symbol,
+          name: symbol,
+          price: q.price,
+          change: q.change ?? 0,
+          changePercent: q.changePercent ?? 0,
+          shares: 0,
+          avgCost: 0,
+          costBasisTotal: 0,
+          acquired: null,
+          sessionOpen: q.open ?? q.previousClose ?? q.price,
+          previousClose: q.previousClose ?? q.price,
+          history: [],
+        });
+        setQuoteState('ok');
+      } catch {
+        if (!cancelled) setQuoteState('untradable');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isReady, inWatchlist, symbol]);
+
+  // The stock the page renders: the live watchlist entry if present, else the
+  // fetched quote. Membership is tracked separately via `inWatchlist`.
+  const selectedStock = watchlistStock ?? fetchedStock;
 
   useEffect(() => {
     setMounted(true);
@@ -190,10 +233,13 @@ export function Dashboard({ symbol }: { symbol: string }) {
   // viewing a non-1D period). 1D pulls from selectedStock.history, which is
   // already populated by useStockData on mount and kept current via the WS stream.
   useEffect(() => {
-    if (period === '1D' || !selectedStock?.symbol) {
+    // Watchlist members render 1D from the live WS history; everyone else (and
+    // every non-1D period) fetches bars for the symbol directly.
+    if (period === '1D' && inWatchlist) {
       setChartData(null);
       return;
     }
+    if (!symbol) return;
     let cancelled = false;
     const cfg = PERIODS.find(p => p.key === period)!;
     const isIntraday = intradayKeys.includes(period);
@@ -201,7 +247,7 @@ export function Dashboard({ symbol }: { symbol: string }) {
     const load = async () => {
       try {
         setChartLoading(true);
-        const res = await fetch(`/api/history?symbol=${encodeURIComponent(selectedStock.symbol)}&range=${cfg.range}&interval=${cfg.interval}`);
+        const res = await fetch(`/api/history?symbol=${encodeURIComponent(symbol)}&range=${cfg.range}&interval=${cfg.interval}`);
         if (!res.ok) throw new Error(`history ${res.status}`);
         const data: { points?: { t: number; price: number }[] } = await res.json();
         if (cancelled || !data.points) return;
@@ -225,21 +271,21 @@ export function Dashboard({ symbol }: { symbol: string }) {
     return () => {
       cancelled = true;
     };
-  }, [selectedStock?.symbol, period]);
+  }, [symbol, inWatchlist, period]);
 
   // Pull company profile, key metrics, and news in parallel whenever the
   // symbol changes. Both routes are server-cached so flicking between
   // already-visited tickers stays snappy.
   useEffect(() => {
-    if (!selectedStock?.symbol) return;
+    if (!symbol) return;
     let cancelled = false;
     setStockInfo(null);
     setNewsArticles(null);
     (async () => {
       try {
         const [infoRes, newsRes] = await Promise.all([
-          fetch(`/api/stock-info?symbol=${encodeURIComponent(selectedStock.symbol)}`),
-          fetch(`/api/stock-news?symbol=${encodeURIComponent(selectedStock.symbol)}`),
+          fetch(`/api/stock-info?symbol=${encodeURIComponent(symbol)}`),
+          fetch(`/api/stock-news?symbol=${encodeURIComponent(symbol)}`),
         ]);
         if (cancelled) return;
         if (infoRes.ok) setStockInfo(await infoRes.json());
@@ -252,15 +298,16 @@ export function Dashboard({ symbol }: { symbol: string }) {
       }
     })();
     return () => { cancelled = true; };
-  }, [selectedStock?.symbol]);
+  }, [symbol]);
 
   // Defensive while still above the early-return — keeps hook order stable.
   const positive = (selectedStock?.change ?? 0) >= 0;
   const accent = positive ? PROFIT : LOSS;
 
-  // 1D draws from the live WS-fed history; other periods use the fetched bars.
+  // 1D draws from the live WS-fed history for watchlist members; everyone else
+  // (and other periods) uses the fetched bars.
   const activeChartData: ChartPoint[] | null = period === '1D'
-    ? (selectedStock && selectedStock.history.length >= 2 ? selectedStock.history : null)
+    ? (inWatchlist && selectedStock && selectedStock.history.length >= 2 ? selectedStock.history : chartData)
     : chartData;
 
   // Color the chart line/gradient based on the period's net move (first vs. last point),
@@ -290,47 +337,32 @@ export function Dashboard({ symbol }: { symbol: string }) {
   }
 
   if (!selectedStock) {
-    return (
-      <div className="flex flex-col flex-1 w-full bg-background">
-        <header className="sticky top-[var(--demo-banner-h,0px)] z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
-          <SearchBar className="w-full max-w-sm shrink" />
-          <TopNav className="hidden lg:flex shrink-0" />
-        </header>
-        <main className="flex-1 w-full max-w-md mx-auto px-4 sm:px-6 py-16 flex flex-col items-center text-center gap-4">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Not in your watchlist</p>
-          <h1 className="text-3xl font-bold tracking-tight">{symbol}</h1>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            Add this symbol to your watchlist to see live price data and start trading it.
-          </p>
-          <div className="flex gap-2 mt-2">
-            <Button
-              type="button"
-              onClick={async () => {
-                if (adding) return;
-                setAdding(true);
-                try {
-                  const res = await addWatchlist({ symbol });
-                  if (res.ok) {
-                    await refresh();
-                    toast.success(`${symbol} added to watchlist`);
-                  } else {
-                    toast.error(res.error);
-                  }
-                } finally {
-                  setAdding(false);
-                }
-              }}
-              disabled={adding}
-              style={{ backgroundColor: PROFIT, color: "#000" }}
-              className="font-bold uppercase tracking-widest"
-            >
-              {adding ? "Adding…" : "Add to watchlist"}
-            </Button>
-            <Button type="button" variant="outline" onClick={() => router.push("/")}>
+    // Not on the watchlist: the quote is still resolving, or Finnhub genuinely
+    // has no data for this ticker (the only case we can't render).
+    if (quoteState === 'untradable') {
+      return (
+        <div className="flex flex-col flex-1 w-full bg-background">
+          <header className="sticky top-[var(--demo-banner-h,0px)] z-20 flex h-14 items-center gap-3 border-b border-border/40 bg-background/90 backdrop-blur-xl w-full px-4">
+            <SearchBar className="w-full max-w-none sm:max-w-sm shrink" />
+            <TopNav className="hidden lg:flex shrink-0" />
+          </header>
+          <main className="flex-1 w-full max-w-md mx-auto px-4 sm:px-6 py-16 flex flex-col items-center text-center gap-4">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">No market data</p>
+            <h1 className="text-3xl font-bold tracking-tight break-words">{symbol}</h1>
+            <p className="text-sm text-muted-foreground max-w-xs">
+              We couldn&rsquo;t find tradable market data for this symbol on Finnhub. Double-check the
+              ticker or try another from search.
+            </p>
+            <Button type="button" variant="outline" onClick={() => router.push("/")} className="mt-2">
               Back home
             </Button>
-          </div>
-        </main>
+          </main>
+        </div>
+      );
+    }
+    return (
+      <div className="flex flex-col flex-1 min-h-screen bg-background items-center justify-center w-full">
+        <Activity className="h-10 w-10 animate-pulse" style={{ color: PROFIT }} />
       </div>
     );
   }
@@ -580,7 +612,7 @@ export function Dashboard({ symbol }: { symbol: string }) {
               Sell
             </Button>
           </div>
-          {isReady && (
+          {inWatchlist && isReady && (
             <button
               type="button"
               onClick={() => {
@@ -778,6 +810,36 @@ export function Dashboard({ symbol }: { symbol: string }) {
         confirmLabel="Remove"
         destructive
       />
+
+      {/* Overlay FAB to add the symbol to the watchlist when it isn't already.
+          Sits above the mobile nav dock; bottom-right on desktop. */}
+      {!inWatchlist && (
+        <button
+          type="button"
+          onClick={async () => {
+            if (adding) return;
+            setAdding(true);
+            try {
+              const res = await addWatchlist({ symbol });
+              if (res.ok) {
+                await refresh();
+                toast.success(`${symbol} added to watchlist`);
+              } else {
+                toast.error(res.error);
+              }
+            } finally {
+              setAdding(false);
+            }
+          }}
+          disabled={adding}
+          aria-label={`Add ${symbol} to watchlist`}
+          title={`Add ${symbol} to watchlist`}
+          className="fixed bottom-20 right-4 lg:bottom-6 lg:right-6 z-30 h-14 w-14 rounded-full flex items-center justify-center shadow-2xl transition-transform hover:scale-105 active:scale-95 disabled:opacity-70"
+          style={{ backgroundColor: PROFIT, color: "#000" }}
+        >
+          {adding ? <Activity className="h-6 w-6 animate-pulse" /> : <Plus className="h-6 w-6" strokeWidth={2.5} />}
+        </button>
+      )}
     </div>
   );
 }
