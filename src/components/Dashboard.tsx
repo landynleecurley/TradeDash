@@ -23,6 +23,7 @@ import { Activity, ExternalLink, Bell, ArrowUp, ArrowDown, Check, X as XIcon, Cr
 import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { MarketStatus } from "@/components/ui/MarketStatus";
 import { cn } from "@/lib/utils";
 import type { StockInfo as WatchlistStock } from "@/lib/useStockData";
 
@@ -426,26 +427,9 @@ export function Dashboard({ symbol }: { symbol: string }) {
         <div className="ml-auto flex items-center gap-4">
           <NotificationsBell />
           {usingMockData && (
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mock</span>
+            <span className="hidden sm:inline text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mock</span>
           )}
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: marketState.color }} />
-            <span
-              className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest"
-              style={{ color: marketState.color }}
-            >
-              {marketState.label}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span
-              className={cn("h-2 w-2 rounded-full", isLive ? "animate-pulse" : "bg-muted-foreground/40")}
-              style={isLive ? { backgroundColor: PROFIT } : undefined}
-            />
-            <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              {isLive ? "Live" : "Offline"}
-            </span>
-          </div>
+          <MarketStatus isLive={isLive} marketLabel={marketState.label} marketColor={marketState.color} />
         </div>
       </header>
 

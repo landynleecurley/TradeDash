@@ -21,6 +21,7 @@ import { Activity, Copy, ExternalLink, TrendingDown, TrendingUp } from "lucide-r
 import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
+import { MarketStatus } from "@/components/ui/MarketStatus";
 import { cn } from "@/lib/utils";
 
 const PROFIT = "var(--brand)";
@@ -282,21 +283,7 @@ export default function Home() {
           {usingMockData && (
             <span className="hidden sm:inline text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mock</span>
           )}
-          <div className="flex items-center gap-2">
-            <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: marketState.color }} />
-            <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest" style={{ color: marketState.color }}>
-              {marketState.label}
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span
-              className={cn("h-2 w-2 rounded-full", isLive ? "animate-pulse" : "bg-muted-foreground/40")}
-              style={isLive ? { backgroundColor: PROFIT } : undefined}
-            />
-            <span className="hidden sm:inline text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              {isLive ? "Live" : "Offline"}
-            </span>
-          </div>
+          <MarketStatus isLive={isLive} marketLabel={marketState.label} marketColor={marketState.color} />
         </div>
       </header>
 

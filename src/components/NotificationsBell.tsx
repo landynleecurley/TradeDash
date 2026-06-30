@@ -40,7 +40,7 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const popoverRef = useRef<HTMLDivElement | null>(null);
-  const [position, setPosition] = useState<{ top: number; right: number; left: number | null } | null>(null);
+  const [position, setPosition] = useState<{ top: number; right: number; centered: boolean } | null>(null);
 
   // Apply preferences: items whose category has inApp turned off don't
   // appear in the feed (we still keep them in the DB for if/when the
@@ -57,10 +57,10 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
       const mobile = window.innerWidth < 640;
       setPosition({
         top: rect.bottom + 8,
-        // On mobile, pin to both edges so the panel can't run off-screen when
-        // the bell sits mid-header (e.g., before the market/live dots).
-        left: mobile ? 8 : null,
-        right: mobile ? 8 : window.innerWidth - rect.right,
+        // On mobile, center the card in the viewport regardless of where the
+        // bell sits; on desktop, anchor it under the bell's right edge.
+        centered: mobile,
+        right: mobile ? 0 : window.innerWidth - rect.right,
       });
     };
     compute();
@@ -136,8 +136,10 @@ export function NotificationsBell({ className = "" }: { className?: string }) {
           ref={popoverRef}
           role="dialog"
           aria-label="Notifications"
-          className="fixed z-50 sm:w-[22rem] max-w-[calc(100vw-1rem)] rounded-lg border border-border/60 bg-card shadow-2xl overflow-hidden motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-150"
-          style={{ top: position.top, right: position.right, left: position.left ?? undefined }}
+          className="fixed z-50 w-[22rem] max-w-[calc(100vw-1rem)] rounded-lg border border-border/60 bg-card shadow-2xl overflow-hidden motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-150"
+          style={position.centered
+            ? { top: position.top, left: 0, right: 0, marginLeft: "auto", marginRight: "auto" }
+            : { top: position.top, right: position.right }}
         >
           <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
             <p className="text-sm font-bold tracking-tight">
