@@ -120,6 +120,9 @@ export function Modal({
   const titleId = useId();
   const subtitleId = useId();
   const [phase, setPhase] = useState<"closed" | "entering" | "open" | "leaving">(open ? "entering" : "closed");
+  // How much the on-screen keyboard overlaps the viewport, so we can lift the
+  // mobile bottom-sheet above it (otherwise the keyboard covers the inputs).
+  const [kbInset, setKbInset] = useState(0);
   const previouslyFocused = useRef<HTMLElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
   const onCloseRef = useRef(onClose);
@@ -170,6 +173,26 @@ export function Modal({
       const idx = openStack.lastIndexOf(close);
       if (idx >= 0) openStack.splice(idx, 1);
       unlockBodyScroll();
+    };
+  }, [isMounted]);
+
+  // Track the on-screen keyboard via the visual viewport and lift the sheet
+  // above it so focused inputs stay visible on mobile.
+  useEffect(() => {
+    if (!isMounted) return;
+    const vv = typeof window !== "undefined" ? window.visualViewport : null;
+    if (!vv) return;
+    const update = () => {
+      const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+      setKbInset(inset > 100 ? inset : 0);
+    };
+    update();
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+      setKbInset(0);
     };
   }, [isMounted]);
 
@@ -247,6 +270,7 @@ export function Modal({
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
       role="presentation"
+      style={{ paddingBottom: kbInset }}
     >
       {/* Backdrop */}
       <div
@@ -284,7 +308,10 @@ export function Modal({
             : "opacity-0 translate-y-6 sm:translate-y-0 sm:scale-95",
           panelClassName ?? "",
         ].join(" ")}
-        style={{ transitionDuration: `${TRANSITION_MS}ms` }}
+        style={{
+          transitionDuration: `${TRANSITION_MS}ms`,
+          ...(kbInset > 0 ? { maxHeight: `calc(100vh - ${kbInset + 16}px)` } : null),
+        }}
       >
         {showClose && (
           <button
