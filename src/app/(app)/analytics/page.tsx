@@ -214,6 +214,7 @@ export default function AnalyticsPage() {
           <nav className="flex flex-wrap gap-x-6 gap-y-2 mt-4 border-b border-border/40 pb-2">
             <NavTab href="/account">Investing</NavTab>
             <NavTab href="/analytics" active>Analytics</NavTab>
+            <NavTab href="/billing">Billing</NavTab>
             <NavTab href="/settings">Settings</NavTab>
           </nav>
         </section>

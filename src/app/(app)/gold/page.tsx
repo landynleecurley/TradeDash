@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import { useGlobalStockData } from "@/components/StockDataProvider";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import { PrioritySupportModal } from "@/components/PrioritySupportModal";
-import { subscribeMembership, cancelMembership, terminateMembership } from "@/lib/actions";
+import { subscribeMembership } from "@/lib/actions";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchBar } from "@/components/SearchBar";
@@ -13,14 +14,12 @@ import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import {
   Crown, CreditCard, Sparkles, ShieldCheck, TrendingUp, Bell,
-  Headphones, Coins, Receipt, ListChecks,
+  Headphones, Coins, ArrowRight,
 } from "lucide-react";
-import type { Tx } from "@/lib/portfolio-series";
 
 const GOLD = "#E8B530";
 const GOLD_DARK = "#B8861F";
 const PROFIT = "var(--brand)";
-const LOSS = "#FF5000";
 
 const MONTHLY_PRICE = 5;
 const ANNUAL_PRICE = 50;
@@ -28,23 +27,11 @@ const ANNUAL_SAVINGS_PCT = Math.round((1 - ANNUAL_PRICE / (MONTHLY_PRICE * 12)) 
 
 type Plan = 'monthly' | 'annual';
 
-type ConfirmIntent =
-  | { kind: 'subscribe'; plan: Plan }
-  | { kind: 'switch'; plan: Plan }
-  | { kind: 'cancel-renew' }
-  | { kind: 'terminate' };
+type ConfirmIntent = { kind: 'subscribe'; plan: Plan };
 
 function formatDate(iso: string | null) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString([], { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-function formatDateTime(iso: string | null) {
-  if (!iso) return '—';
-  return new Date(iso).toLocaleString([], {
-    month: 'short', day: 'numeric', year: 'numeric',
-    hour: 'numeric', minute: '2-digit',
-  });
 }
 
 export default function GoldPage() {
@@ -84,18 +71,6 @@ export default function GoldPage() {
   const cancelled = !!membership?.cancelledAt;
   const currentPlan = membership?.plan ?? null;
   const expiresAt = membership?.expiresAt ?? null;
-  // Only nag about manual renewal when the membership is close to lapsing.
-  // Active subscriptions with >7 days remaining auto-renew via the hero
-  // copy ("renews on <date>"); we don't want the button competing with that.
-  const daysUntilExpiry = expiresAt
-    ? Math.max(0, Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24)))
-    : 0;
-  const showManualRenew = !cancelled && currentPlan !== null && daysUntilExpiry <= 7;
-
-  const paymentHistory = useMemo<Tx[]>(
-    () => transactions.filter(t => t.type === 'MEMBERSHIP').reverse(),
-    [transactions],
-  );
 
   const runSubscribe = async (plan: Plan) => {
     if (subscribingRef.current) return;
@@ -128,30 +103,7 @@ export default function GoldPage() {
     setConfirmBusy(true);
     setTopErr(null);
     try {
-      switch (confirmingIntent.kind) {
-        case 'subscribe':
-        case 'switch':
-          await runSubscribe(confirmingIntent.plan);
-          break;
-        case 'cancel-renew': {
-          const res = await cancelMembership();
-          if (!res.ok) setTopErr(res.error);
-          else {
-            await refresh();
-            toast.success("Auto-renew cancelled");
-          }
-          break;
-        }
-        case 'terminate': {
-          const res = await terminateMembership();
-          if (!res.ok) setTopErr(res.error);
-          else {
-            await refresh();
-            toast.success("Membership ended");
-          }
-          break;
-        }
-      }
+      await runSubscribe(confirmingIntent.plan);
     } finally {
       confirmBusyRef.current = false;
       setConfirmBusy(false);
@@ -161,41 +113,14 @@ export default function GoldPage() {
 
   const confirmCopy = (() => {
     if (!confirmingIntent) return { title: '', message: '', label: 'Confirm', destructive: false };
-    if (confirmingIntent.kind === 'subscribe') {
-      const plan = confirmingIntent.plan;
-      const price = plan === 'monthly' ? MONTHLY_PRICE : ANNUAL_PRICE;
-      const cadence = plan === 'monthly' ? 'month' : 'year';
-      return {
-        title: `Subscribe to TradeDash Gold ${plan}?`,
-        message: `$${price.toFixed(2)} will be charged from your cash balance now. Renews automatically each ${cadence} until you cancel.`,
-        label: `Charge $${price.toFixed(2)}`,
-        destructive: false,
-      };
-    }
-    if (confirmingIntent.kind === 'switch') {
-      const plan = confirmingIntent.plan;
-      const price = plan === 'monthly' ? MONTHLY_PRICE : ANNUAL_PRICE;
-      const cadence = plan === 'monthly' ? 'month' : 'year';
-      return {
-        title: `Switch to ${plan} plan?`,
-        message: `$${price.toFixed(2)} will be charged from your cash balance and your benefits will extend by one ${cadence}. Your current ${currentPlan ?? ''} plan ends and the ${plan} cadence starts immediately.`,
-        label: `Charge $${price.toFixed(2)}`,
-        destructive: false,
-      };
-    }
-    if (confirmingIntent.kind === 'cancel-renew') {
-      return {
-        title: 'Cancel auto-renew?',
-        message: `You'll keep Gold benefits until ${formatDate(expiresAt)}. After that, the card flips back to standard and any in-flight perks pause. You can resubscribe any time.`,
-        label: 'Cancel renewal',
-        destructive: true,
-      };
-    }
+    const plan = confirmingIntent.plan;
+    const price = plan === 'monthly' ? MONTHLY_PRICE : ANNUAL_PRICE;
+    const cadence = plan === 'monthly' ? 'month' : 'year';
     return {
-      title: 'End membership now?',
-      message: `This immediately ends your Gold benefits — no refund of remaining time. The Gold card flips back to standard and the badge disappears. You can resubscribe any time.`,
-      label: 'End now',
-      destructive: true,
+      title: `Subscribe to TradeDash Gold ${plan}?`,
+      message: `$${price.toFixed(2)} will be charged from your cash balance now. Renews automatically each ${cadence} until you cancel.`,
+      label: `Charge $${price.toFixed(2)}`,
+      destructive: false,
     };
   })();
 
@@ -260,103 +185,22 @@ export default function GoldPage() {
         {!isReady ? (
           <Skeleton className="h-44 w-full rounded-lg" />
         ) : isGoldActive ? (
-          <section className="rounded-lg border border-border/40 p-6 space-y-6">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-px rounded-md overflow-hidden border border-border/40">
-              <ManageStat label="Plan" value={(currentPlan ?? '').toUpperCase() || '—'} />
-              <ManageStat label="Started" value={formatDate(membership?.startedAt ?? null)} />
-              <ManageStat
-                label={cancelled ? 'Ends' : 'Renews'}
-                value={formatDate(expiresAt)}
-                color={cancelled ? LOSS : undefined}
-              />
-              <ManageStat label="Total paid" value={`$${(membership?.totalPaid ?? 0).toFixed(2)}`} />
+          <section className="rounded-lg border border-border/40 p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="min-w-0">
+              <p className="text-sm font-bold tracking-tight">Manage your subscription</p>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Change your plan, manage auto-renew, or view payment history on your billing page.
+                Plan changes take effect on your next billing cycle.
+              </p>
             </div>
-
-            <div className="space-y-3">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Manage subscription</p>
-              <div className="flex flex-wrap items-center gap-2">
-                {showManualRenew && currentPlan && (
-                  <Button
-                    type="button"
-                    onClick={() => setConfirmingIntent({ kind: 'subscribe', plan: currentPlan })}
-                    disabled={subscribing !== null}
-                    className="font-bold uppercase tracking-widest"
-                    style={{ backgroundColor: GOLD, color: "#000" }}
-                  >
-                    {subscribing === currentPlan
-                      ? 'Renewing…'
-                      : daysUntilExpiry <= 0
-                        ? `Renew now $${currentPlan === 'monthly' ? MONTHLY_PRICE : ANNUAL_PRICE}`
-                        : `Renew now · ${daysUntilExpiry}d left`}
-                  </Button>
-                )}
-
-                {/* Auto-renew status pill — replaces the Renew button while
-                    the membership has comfortable runway. */}
-                {!showManualRenew && !cancelled && currentPlan && (
-                  <span
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest"
-                    style={{ backgroundColor: `${GOLD}1a`, color: GOLD }}
-                  >
-                    <span
-                      className="h-1.5 w-1.5 rounded-full animate-pulse"
-                      style={{ backgroundColor: GOLD }}
-                    />
-                    Auto-renew on · {daysUntilExpiry}d
-                  </span>
-                )}
-
-                {/* Re-subscribe option for cancelled (still in window) */}
-                {cancelled && currentPlan && (
-                  <Button
-                    type="button"
-                    onClick={() => setConfirmingIntent({ kind: 'subscribe', plan: currentPlan })}
-                    disabled={subscribing !== null}
-                    className="font-bold uppercase tracking-widest"
-                    style={{ backgroundColor: GOLD, color: "#000" }}
-                  >
-                    {subscribing === currentPlan ? 'Resubscribing…' : `Resume $${currentPlan === 'monthly' ? MONTHLY_PRICE : ANNUAL_PRICE} / ${currentPlan === 'monthly' ? 'month' : 'year'}`}
-                  </Button>
-                )}
-
-                {/* Only offer the *upgrade* path (monthly → annual). Letting
-                    users "switch" from annual to monthly silently re-charges
-                    $5 and downgrades the plan label, which we never want. */}
-                {currentPlan === 'monthly' && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setConfirmingIntent({ kind: 'switch', plan: 'annual' })}
-                    disabled={subscribing !== null}
-                  >
-                    {subscribing === 'annual'
-                      ? 'Switching…'
-                      : `Switch to annual ($${ANNUAL_PRICE} / yr · save ${ANNUAL_SAVINGS_PCT}%)`}
-                  </Button>
-                )}
-              </div>
-
-              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-border/40">
-                {!cancelled && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setConfirmingIntent({ kind: 'cancel-renew' })}
-                    className="text-rose-500 hover:text-rose-500"
-                  >
-                    Cancel auto-renew
-                  </Button>
-                )}
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setConfirmingIntent({ kind: 'terminate' })}
-                  className="text-rose-500 hover:text-rose-500"
-                >
-                  End membership now
-                </Button>
-              </div>
-            </div>
+            <Button
+              render={<Link href="/billing" />}
+              nativeButton={false}
+              className="font-bold uppercase tracking-widest gap-1.5 shrink-0"
+              style={{ backgroundColor: GOLD, color: "#000" }}
+            >
+              Manage billing <ArrowRight className="h-4 w-4" />
+            </Button>
           </section>
         ) : (
           <section className="grid sm:grid-cols-2 gap-3">
@@ -378,41 +222,6 @@ export default function GoldPage() {
               insufficient={cashBalance < ANNUAL_PRICE}
               highlight
             />
-          </section>
-        )}
-
-        {/* Payment history */}
-        {paymentHistory.length > 0 && (
-          <section className="space-y-3">
-            <header className="flex items-baseline justify-between">
-              <h2 className="text-lg font-bold tracking-tight">Payment history</h2>
-              <span className="text-xs text-muted-foreground">
-                Total paid <span className="font-mono font-semibold text-foreground">${(membership?.totalPaid ?? 0).toFixed(2)}</span>
-              </span>
-            </header>
-            <div className="rounded-lg border border-border/40 divide-y divide-border/40 overflow-hidden">
-              {paymentHistory.map(tx => (
-                <div key={tx.id ?? `${tx.t}-${tx.amount}`} className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div
-                      className="h-9 w-9 rounded-full flex items-center justify-center shrink-0"
-                      style={{ color: GOLD, backgroundColor: `${GOLD}1a` }}
-                    >
-                      <Receipt className="h-4 w-4" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold tracking-tight truncate">{tx.symbol ?? 'Membership'}</p>
-                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-widest mt-0.5">
-                        {formatDateTime(new Date(tx.t * 1000).toISOString())}
-                      </p>
-                    </div>
-                  </div>
-                  <p className="font-mono font-bold text-sm" style={{ color: LOSS }}>
-                    -${tx.amount.toFixed(2)}
-                  </p>
-                </div>
-              ))}
-            </div>
           </section>
         )}
 
@@ -646,12 +455,3 @@ function Benefit({
 
 const formatMoney = (n: number) =>
   `$${n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-
-function ManageStat({ label, value, color }: { label: string; value: string; color?: string }) {
-  return (
-    <div className="bg-background p-3">
-      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{label}</p>
-      <p className="font-mono font-bold mt-1.5 text-sm" style={color ? { color } : undefined}>{value}</p>
-    </div>
-  );
-}

@@ -117,6 +117,7 @@ export default function AccountPage() {
           <nav className="flex flex-wrap gap-x-6 gap-y-2 mt-4 border-b border-border/40 pb-2">
             <NavTab href="/account" active>Investing</NavTab>
             <NavTab href="/analytics">Analytics</NavTab>
+            <NavTab href="/billing">Billing</NavTab>
             <NavTab href="/settings">Settings</NavTab>
           </nav>
         </section>
@@ -332,7 +333,7 @@ export default function AccountPage() {
                 <Big>—</Big>
               )
             ) : <Skeleton className="h-7 w-24" />}
-            <Link href="/gold" className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest mt-2 hover:underline" style={{ color: '#E8B530' }}>
+            <Link href={isGoldActive ? '/billing' : '/gold'} className="inline-flex items-center gap-1 text-xs font-bold uppercase tracking-widest mt-2 hover:underline" style={{ color: '#E8B530' }}>
               <Crown className="h-3 w-3" />
               {isGoldActive ? 'Manage' : 'Upgrade'} →
             </Link>

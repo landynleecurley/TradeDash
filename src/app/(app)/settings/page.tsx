@@ -225,6 +225,7 @@ export default function SettingsPage() {
           <nav className="flex flex-wrap gap-x-6 gap-y-2 mt-4 border-b border-border/40 pb-2">
             <SettingsNavTab href="/account">Investing</SettingsNavTab>
             <SettingsNavTab href="/analytics">Analytics</SettingsNavTab>
+            <SettingsNavTab href="/billing">Billing</SettingsNavTab>
             <SettingsNavTab href="/settings" active>Settings</SettingsNavTab>
           </nav>
         </section>

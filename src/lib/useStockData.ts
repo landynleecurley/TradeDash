@@ -23,6 +23,7 @@ export type CardInfo = {
 export type MembershipInfo = {
   status: 'active' | 'inactive';
   plan: 'monthly' | 'annual' | null;
+  pendingPlan: 'monthly' | 'annual' | null;
   startedAt: string | null;
   expiresAt: string | null;
   cancelledAt: string | null;
@@ -197,7 +198,7 @@ export function useStockData() {
       supabase.from('watchlist').select('symbol, name').eq('user_id', user.id).order('added_at', { ascending: true }),
       supabase.from('transactions').select('id, type, symbol, shares, amount, created_at').order('created_at', { ascending: true }),
       supabase.from('cards').select('id, card_number, cardholder_name, expiry_month, expiry_year, cvv, status, daily_limit, has_pin, card_type, ordered_at, shipped_at').neq('status', 'cancelled').limit(1).maybeSingle(),
-      supabase.from('memberships').select('status, plan, started_at, expires_at, cancelled_at, total_paid').eq('user_id', user.id).maybeSingle(),
+      supabase.from('memberships').select('status, plan, pending_plan, started_at, expires_at, cancelled_at, total_paid').eq('user_id', user.id).maybeSingle(),
       supabase.from('external_accounts').select('id, nickname, institution, account_kind, last4, routing_last4, is_default, created_at').eq('user_id', user.id).order('created_at', { ascending: true }),
       supabase.from('notifications').select('id, category, title, body, link, read_at, created_at').eq('user_id', user.id).order('created_at', { ascending: false }).limit(50),
       supabase.from('price_alerts').select('id, symbol, direction, threshold, created_at, triggered_at, triggered_price').eq('user_id', user.id).order('created_at', { ascending: false }),
@@ -257,6 +258,7 @@ export function useStockData() {
       setMembership({
         status: membershipRes.data.status,
         plan: membershipRes.data.plan,
+        pendingPlan: membershipRes.data.pending_plan ?? null,
         startedAt: membershipRes.data.started_at,
         expiresAt: membershipRes.data.expires_at,
         cancelledAt: membershipRes.data.cancelled_at,

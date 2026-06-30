@@ -360,6 +360,15 @@ export async function cancelMembership(): Promise<Result<null>> {
   return { ok: true, data: null };
 }
 
+// Queue a plan change for the next billing cycle. Passing the CURRENT plan
+// clears any pending change.
+export async function schedulePlanChange(plan: 'monthly' | 'annual'): Promise<Result<null>> {
+  const supabase = await createClient();
+  const { error } = await supabase.rpc('schedule_plan_change', { p_plan: plan });
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, data: null };
+}
+
 export async function terminateMembership(): Promise<Result<null>> {
   const supabase = await createClient();
   const { error } = await supabase.rpc('terminate_membership');
