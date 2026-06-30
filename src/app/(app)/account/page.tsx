@@ -378,7 +378,9 @@ function Card({ title, info, children }: { title: string; info?: string; childre
         <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
         {info && <InfoHint label={info} side="top" size="sm" />}
       </div>
-      <div className="pt-2">{children}</div>
+      {/* Column so secondary text (links, hints, %) always sits below the value,
+          even when the value renders inline (e.g. AnimatedNumber's span). */}
+      <div className="pt-2 flex flex-col items-start">{children}</div>
     </div>
   );
 }
