@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useGlobalStockData } from "@/components/StockDataProvider";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Button } from "@/components/ui/button";
 import { useContextMenu, type ContextMenuItem } from "@/components/ui/ContextMenu";
 import { OnboardingChecklist } from "@/components/OnboardingChecklist";
 import { TransferModal } from "@/components/TransferModal";
@@ -22,7 +21,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { MarketStatus } from "@/components/ui/MarketStatus";
-import { StockPricePopover } from "@/components/ui/StockPricePopover";
+import { CyclingStat } from "@/components/ui/CyclingStat";
 import { cn } from "@/lib/utils";
 
 const PROFIT = "var(--brand)";
@@ -594,29 +593,15 @@ function WatchlistRow({ stock, isReady }: { stock: StockInfo; isReady: boolean }
       href={`/stock/${stock.symbol}`}
       className="flex items-center justify-between gap-3 px-3 py-2.5 hover:bg-foreground/[0.02] transition-colors"
     >
-      <div className="flex flex-col min-w-0 shrink-0">
+      <div className="min-w-0 shrink-0">
         <span className="text-sm font-bold tracking-tight">{stock.symbol}</span>
-        {isReady ? (
-          <StockPricePopover symbol={stock.symbol} side="bottom">
-            <span className="font-mono text-xs text-muted-foreground tabular-nums">
-              ${stock.price.toFixed(2)}
-            </span>
-          </StockPricePopover>
-        ) : (
-          <Skeleton className="h-3 w-12 mt-1" />
-        )}
       </div>
       <Sparkline data={stock.history} positive={positive} />
-      <div className="text-right shrink-0 min-w-[3.5rem]">
+      <div className="shrink-0 min-w-[4.5rem] flex justify-end">
         {isReady ? (
-          <span
-            className="text-xs font-bold font-mono tabular-nums"
-            style={{ color: positive ? PROFIT : LOSS }}
-          >
-            {positive ? "+" : ""}{stock.changePercent.toFixed(2)}%
-          </span>
+          <CyclingStat symbol={stock.symbol} />
         ) : (
-          <Skeleton className="h-3 w-10" />
+          <Skeleton className="h-7 w-14" />
         )}
       </div>
     </Link>
@@ -636,26 +621,16 @@ function MoverList({ title, movers }: { title: string; movers: StockInfo[] }) {
     <div className="rounded-lg border border-border/40 overflow-hidden">
       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-4 pt-4 pb-2">{title}</p>
       <div className="divide-y divide-border/40">
-        {movers.map(s => {
-          const up = s.changePercent >= 0;
-          return (
-            <Link
-              key={s.symbol}
-              href={`/stock/${s.symbol}`}
-              className="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-foreground/[0.02] transition-colors"
-            >
-              <div className="min-w-0">
-                <p className="text-sm font-bold tracking-tight">{s.symbol}</p>
-                <StockPricePopover symbol={s.symbol} side="bottom">
-                  <span className="font-mono text-xs text-muted-foreground tabular-nums">${s.price.toFixed(2)}</span>
-                </StockPricePopover>
-              </div>
-              <span className="text-sm font-bold font-mono tabular-nums shrink-0" style={{ color: up ? PROFIT : LOSS }}>
-                {up ? '+' : ''}{s.changePercent.toFixed(2)}%
-              </span>
-            </Link>
-          );
-        })}
+        {movers.map(s => (
+          <Link
+            key={s.symbol}
+            href={`/stock/${s.symbol}`}
+            className="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-foreground/[0.02] transition-colors"
+          >
+            <p className="text-sm font-bold tracking-tight min-w-0 truncate">{s.symbol}</p>
+            <CyclingStat symbol={s.symbol} initial={1} />
+          </Link>
+        ))}
       </div>
     </div>
   );

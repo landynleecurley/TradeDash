@@ -28,7 +28,7 @@ import {
   formatSignedCurrency,
   formatSignedPercent,
 } from "@/components/ui/AnimatedNumber";
-import { StockPricePopover } from "@/components/ui/StockPricePopover";
+import { CyclingStat } from "@/components/ui/CyclingStat";
 import {
   Activity, Copy, ExternalLink, LogOut, Plus,
   Trash2, TrendingDown, TrendingUp, X,
@@ -317,33 +317,15 @@ function WatchlistRow({ stock, isReady, isActive, onRemove }: WatchlistRowProps)
         className="h-auto py-2 px-3 mx-1 rounded-md hover:bg-foreground/5 data-[active=true]:bg-foreground/10 transition-colors"
       >
         <div className="flex items-center justify-between w-full gap-2">
-          <div className="flex flex-col min-w-0 shrink-0">
+          <div className="min-w-0 shrink-0">
             <span className="text-sm font-bold tracking-tight">{stock.symbol}</span>
-            {isReady ? (
-              <StockPricePopover symbol={stock.symbol} side="right">
-                <AnimatedNumber
-                  value={stock.price}
-                  formatter={formatCurrency()}
-                  duration={250}
-                  className="font-mono text-xs text-muted-foreground tabular-nums"
-                />
-              </StockPricePopover>
-            ) : (
-              <Skeleton className="h-3 w-12 mt-1" />
-            )}
           </div>
           <Sparkline data={stock.history} positive={positive} />
-          <div className="flex flex-col items-end shrink-0 min-w-[3.5rem]">
+          <div className="flex justify-end shrink-0 min-w-[4.5rem]">
             {isReady ? (
-              <AnimatedNumber
-                value={stock.changePercent}
-                formatter={formatSignedPercent()}
-                duration={250}
-                className="text-xs font-bold font-mono tabular-nums"
-                style={{ color: positive ? PROFIT : LOSS }}
-              />
+              <CyclingStat symbol={stock.symbol} />
             ) : (
-              <Skeleton className="h-3 w-10" />
+              <Skeleton className="h-7 w-14" />
             )}
           </div>
         </div>
