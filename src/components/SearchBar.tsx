@@ -11,6 +11,48 @@ type SearchResult = {
   type: string;
 };
 
+// Curated, Finnhub-tradable picks per sector so users can browse by category
+// when the box is empty (rather than needing to know a ticker up front).
+const CATEGORIES: { label: string; stocks: { symbol: string; name: string }[] }[] = [
+  { label: "Technology", stocks: [
+    { symbol: "AAPL", name: "Apple" }, { symbol: "MSFT", name: "Microsoft" },
+    { symbol: "NVDA", name: "NVIDIA" }, { symbol: "GOOGL", name: "Alphabet" },
+    { symbol: "META", name: "Meta Platforms" }, { symbol: "AMD", name: "AMD" },
+    { symbol: "CRM", name: "Salesforce" }, { symbol: "ORCL", name: "Oracle" },
+    { symbol: "ADBE", name: "Adobe" }, { symbol: "INTC", name: "Intel" },
+  ] },
+  { label: "Finance", stocks: [
+    { symbol: "JPM", name: "JPMorgan Chase" }, { symbol: "BAC", name: "Bank of America" },
+    { symbol: "WFC", name: "Wells Fargo" }, { symbol: "GS", name: "Goldman Sachs" },
+    { symbol: "MS", name: "Morgan Stanley" }, { symbol: "V", name: "Visa" },
+    { symbol: "MA", name: "Mastercard" }, { symbol: "AXP", name: "American Express" },
+  ] },
+  { label: "Healthcare", stocks: [
+    { symbol: "UNH", name: "UnitedHealth" }, { symbol: "JNJ", name: "Johnson & Johnson" },
+    { symbol: "LLY", name: "Eli Lilly" }, { symbol: "PFE", name: "Pfizer" },
+    { symbol: "MRK", name: "Merck" }, { symbol: "ABBV", name: "AbbVie" },
+    { symbol: "TMO", name: "Thermo Fisher" }, { symbol: "ABT", name: "Abbott" },
+  ] },
+  { label: "Consumer", stocks: [
+    { symbol: "AMZN", name: "Amazon" }, { symbol: "TSLA", name: "Tesla" },
+    { symbol: "HD", name: "Home Depot" }, { symbol: "MCD", name: "McDonald's" },
+    { symbol: "NKE", name: "Nike" }, { symbol: "SBUX", name: "Starbucks" },
+    { symbol: "COST", name: "Costco" }, { symbol: "WMT", name: "Walmart" },
+    { symbol: "DIS", name: "Disney" }, { symbol: "KO", name: "Coca-Cola" },
+  ] },
+  { label: "Energy", stocks: [
+    { symbol: "XOM", name: "ExxonMobil" }, { symbol: "CVX", name: "Chevron" },
+    { symbol: "COP", name: "ConocoPhillips" }, { symbol: "SLB", name: "Schlumberger" },
+    { symbol: "OXY", name: "Occidental" }, { symbol: "EOG", name: "EOG Resources" },
+  ] },
+  { label: "ETFs", stocks: [
+    { symbol: "SPY", name: "S&P 500" }, { symbol: "QQQ", name: "Nasdaq 100" },
+    { symbol: "VOO", name: "Vanguard S&P 500" }, { symbol: "VTI", name: "Total Market" },
+    { symbol: "IWM", name: "Russell 2000" }, { symbol: "DIA", name: "Dow Jones" },
+    { symbol: "ARKK", name: "ARK Innovation" },
+  ] },
+];
+
 export function SearchBar({ className = "" }: { className?: string }) {
   const router = useRouter();
   const [query, setQuery] = useState("");
@@ -18,6 +60,7 @@ export function SearchBar({ className = "" }: { className?: string }) {
   const [open, setOpen] = useState(false);
   const [searching, setSearching] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
+  const [category, setCategory] = useState(CATEGORIES[0].label);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -109,7 +152,7 @@ export function SearchBar({ className = "" }: { className?: string }) {
           onChange={e => setQuery(e.target.value)}
           onFocus={() => setOpen(true)}
           onKeyDown={onInputKey}
-          placeholder="Search symbol or company"
+          placeholder="Search Symbol"
           spellCheck={false}
           autoComplete="off"
           className="w-full h-9 pl-9 pr-12 rounded-md bg-foreground/5 hover:bg-foreground/10 focus:bg-foreground/10 border border-transparent focus:border-border/40 outline-none text-sm placeholder:text-muted-foreground transition-colors"
@@ -130,44 +173,83 @@ export function SearchBar({ className = "" }: { className?: string }) {
         )}
       </div>
 
-      {open && (query.trim().length > 0 || searching) && (
-        <div className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border/50 rounded-lg shadow-2xl overflow-hidden max-h-80 overflow-y-auto z-50">
-          {searching && results.length === 0 && (
-            <p className="text-xs text-muted-foreground p-3 text-center">Searching…</p>
-          )}
-          {!searching && results.length === 0 && query.trim().length > 0 && (
-            <button
-              type="button"
-              onClick={() => navigate(query)}
-              className="w-full p-3 text-left hover:bg-foreground/5 transition-colors"
-            >
-              <p className="text-sm font-bold tracking-tight">{query.trim().toUpperCase()}</p>
-              <p className="text-xs text-muted-foreground">Open this symbol</p>
-            </button>
-          )}
-          {results.length > 0 && (
-            <ul role="listbox">
-              {results.map((r, i) => (
-                <li key={r.symbol}>
+      {open && (
+        <div className="absolute top-full left-0 right-0 mt-1.5 bg-card border border-border/50 rounded-lg shadow-2xl overflow-hidden z-50">
+          {query.trim().length > 0 ? (
+            <div className="max-h-80 overflow-y-auto">
+              {searching && results.length === 0 && (
+                <p className="text-xs text-muted-foreground p-3 text-center">Searching…</p>
+              )}
+              {!searching && results.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => navigate(query)}
+                  className="w-full p-3 text-left hover:bg-foreground/5 transition-colors"
+                >
+                  <p className="text-sm font-bold tracking-tight">{query.trim().toUpperCase()}</p>
+                  <p className="text-xs text-muted-foreground">Open this symbol</p>
+                </button>
+              )}
+              {results.length > 0 && (
+                <ul role="listbox">
+                  {results.map((r, i) => (
+                    <li key={r.symbol}>
+                      <button
+                        type="button"
+                        onClick={() => navigate(r.symbol)}
+                        onMouseEnter={() => setActiveIdx(i)}
+                        className={`w-full flex items-center justify-between p-3 text-left transition-colors ${
+                          i === activeIdx ? 'bg-foreground/10' : 'hover:bg-foreground/5'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-bold tracking-tight">{r.displaySymbol}</p>
+                          <p className="text-xs text-muted-foreground truncate">{r.description}</p>
+                        </div>
+                        <span className="text-[10px] text-muted-foreground uppercase tracking-widest shrink-0 ml-3">
+                          {r.type || 'Equity'}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          ) : (
+            <div>
+              <div className="flex flex-wrap gap-1.5 p-3 border-b border-border/40">
+                {CATEGORIES.map(c => (
                   <button
+                    key={c.label}
                     type="button"
-                    onClick={() => navigate(r.symbol)}
-                    onMouseEnter={() => setActiveIdx(i)}
-                    className={`w-full flex items-center justify-between p-3 text-left transition-colors ${
-                      i === activeIdx ? 'bg-foreground/10' : 'hover:bg-foreground/5'
+                    onClick={() => setCategory(c.label)}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-widest transition-colors ${
+                      category === c.label
+                        ? 'bg-foreground text-background'
+                        : 'bg-foreground/5 text-muted-foreground hover:text-foreground'
                     }`}
                   >
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold tracking-tight">{r.displaySymbol}</p>
-                      <p className="text-xs text-muted-foreground truncate">{r.description}</p>
-                    </div>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest shrink-0 ml-3">
-                      {r.type || 'Equity'}
-                    </span>
+                    {c.label}
                   </button>
-                </li>
-              ))}
-            </ul>
+                ))}
+              </div>
+              <ul role="listbox" className="max-h-72 overflow-y-auto">
+                {(CATEGORIES.find(c => c.label === category)?.stocks ?? []).map(s => (
+                  <li key={s.symbol}>
+                    <button
+                      type="button"
+                      onClick={() => navigate(s.symbol)}
+                      className="w-full flex items-center justify-between p-3 text-left hover:bg-foreground/5 transition-colors"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-bold tracking-tight">{s.symbol}</p>
+                        <p className="text-xs text-muted-foreground truncate">{s.name}</p>
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       )}

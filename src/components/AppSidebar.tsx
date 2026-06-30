@@ -28,6 +28,7 @@ import {
   formatSignedCurrency,
   formatSignedPercent,
 } from "@/components/ui/AnimatedNumber";
+import { StockPricePopover } from "@/components/ui/StockPricePopover";
 import {
   Activity, Copy, ExternalLink, LogOut, Plus,
   Trash2, TrendingDown, TrendingUp, X,
@@ -319,12 +320,14 @@ function WatchlistRow({ stock, isReady, isActive, onRemove }: WatchlistRowProps)
           <div className="flex flex-col min-w-0 shrink-0">
             <span className="text-sm font-bold tracking-tight">{stock.symbol}</span>
             {isReady ? (
-              <AnimatedNumber
-                value={stock.price}
-                formatter={formatCurrency()}
-                duration={250}
-                className="font-mono text-xs text-muted-foreground tabular-nums"
-              />
+              <StockPricePopover symbol={stock.symbol} side="right">
+                <AnimatedNumber
+                  value={stock.price}
+                  formatter={formatCurrency()}
+                  duration={250}
+                  className="font-mono text-xs text-muted-foreground tabular-nums"
+                />
+              </StockPricePopover>
             ) : (
               <Skeleton className="h-3 w-12 mt-1" />
             )}

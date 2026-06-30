@@ -22,6 +22,7 @@ import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
 import { NotificationsBell } from "@/components/NotificationsBell";
 import { MarketStatus } from "@/components/ui/MarketStatus";
+import { StockPricePopover } from "@/components/ui/StockPricePopover";
 import { cn } from "@/lib/utils";
 
 const PROFIT = "var(--brand)";
@@ -265,6 +266,17 @@ export default function Home() {
     return last >= first ? PROFIT : LOSS;
   }, [chartData, chartReady, lastRealIndex, totalGain]);
 
+  // Today's movers, ranked by % change across the symbols you track.
+  const movers = useMemo(() => {
+    const ranked = stocks
+      .filter(s => s.price > 0 && s.changePercent !== 0)
+      .slice()
+      .sort((a, b) => b.changePercent - a.changePercent);
+    const gainers = ranked.filter(s => s.changePercent > 0).slice(0, 4);
+    const losers = ranked.filter(s => s.changePercent < 0).slice(-4).reverse();
+    return { gainers, losers };
+  }, [stocks]);
+
   if (!mounted) {
     return (
       <div className="flex flex-col flex-1 min-h-screen bg-background items-center justify-center w-full">
@@ -414,6 +426,16 @@ export default function Home() {
             })}
           </div>
         </section>
+
+        {(movers.gainers.length > 0 || movers.losers.length > 0) && (
+          <section>
+            <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Today&rsquo;s top movers</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <MoverList title="Gainers" movers={movers.gainers} />
+              <MoverList title="Losers" movers={movers.losers} />
+            </div>
+          </section>
+        )}
 
         <section>
           <h2 className="text-xs font-bold uppercase tracking-widest text-muted-foreground mb-4">Positions</h2>
@@ -575,9 +597,11 @@ function WatchlistRow({ stock, isReady }: { stock: StockInfo; isReady: boolean }
       <div className="flex flex-col min-w-0 shrink-0">
         <span className="text-sm font-bold tracking-tight">{stock.symbol}</span>
         {isReady ? (
-          <span className="font-mono text-xs text-muted-foreground tabular-nums">
-            ${stock.price.toFixed(2)}
-          </span>
+          <StockPricePopover symbol={stock.symbol} side="bottom">
+            <span className="font-mono text-xs text-muted-foreground tabular-nums">
+              ${stock.price.toFixed(2)}
+            </span>
+          </StockPricePopover>
         ) : (
           <Skeleton className="h-3 w-12 mt-1" />
         )}
@@ -596,5 +620,43 @@ function WatchlistRow({ stock, isReady }: { stock: StockInfo; isReady: boolean }
         )}
       </div>
     </Link>
+  );
+}
+
+function MoverList({ title, movers }: { title: string; movers: StockInfo[] }) {
+  if (movers.length === 0) {
+    return (
+      <div className="rounded-lg border border-border/40 p-4">
+        <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{title}</p>
+        <p className="text-xs text-muted-foreground mt-2">No {title.toLowerCase()} today.</p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-lg border border-border/40 overflow-hidden">
+      <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground px-4 pt-4 pb-2">{title}</p>
+      <div className="divide-y divide-border/40">
+        {movers.map(s => {
+          const up = s.changePercent >= 0;
+          return (
+            <Link
+              key={s.symbol}
+              href={`/stock/${s.symbol}`}
+              className="flex items-center justify-between gap-3 px-4 py-2.5 hover:bg-foreground/[0.02] transition-colors"
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-bold tracking-tight">{s.symbol}</p>
+                <StockPricePopover symbol={s.symbol} side="bottom">
+                  <span className="font-mono text-xs text-muted-foreground tabular-nums">${s.price.toFixed(2)}</span>
+                </StockPricePopover>
+              </div>
+              <span className="text-sm font-bold font-mono tabular-nums shrink-0" style={{ color: up ? PROFIT : LOSS }}>
+                {up ? '+' : ''}{s.changePercent.toFixed(2)}%
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </div>
   );
 }
