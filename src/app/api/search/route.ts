@@ -26,9 +26,13 @@ export async function GET(request: Request) {
     );
     if (!res.ok) return Response.json({ error: `finnhub ${res.status}` }, { status: 502 });
     const data = (await res.json()) as { result?: FinnhubSearchResult[] };
+    // Only surface things Finnhub actually trades a quote for: real US common
+    // stocks / ETFs with a clean 1–5 letter ticker. Drops the empty-type
+    // catch-all (indices, non-tradable listings) and warrants/units/dotted
+    // symbols that resolve to no price data.
     const filtered = (data.result ?? [])
-      .filter(r => r.type === 'Common Stock' || r.type === 'ETP' || r.type === 'ETF' || r.type === '')
-      .filter(r => !r.symbol.includes('.'))
+      .filter(r => r.type === 'Common Stock' || r.type === 'ETP' || r.type === 'ETF')
+      .filter(r => /^[A-Z]{1,5}$/.test(r.symbol))
       .slice(0, 10);
     return Response.json({ result: filtered });
   } catch (err) {

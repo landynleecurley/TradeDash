@@ -257,25 +257,27 @@ export default function BillingPage() {
 
               {pendingPlan && otherPlan ? (
                 <div
-                  className="flex items-start gap-3 rounded-md p-4"
+                  className="rounded-md p-4 flex flex-col gap-3 sm:flex-row sm:items-start"
                   style={{ backgroundColor: `${GOLD}12`, border: `1px solid ${GOLD}33` }}
                 >
-                  <CalendarClock className="h-5 w-5 shrink-0 mt-0.5" style={{ color: GOLD }} />
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-bold tracking-tight">
-                      Switching to {labelOf(pendingPlan)} — ${priceOf(pendingPlan)}/{cadenceOf(pendingPlan)}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Takes effect on <span className="text-foreground font-semibold">{formatDate(expiresAt)}</span>.
-                      You&rsquo;ll be charged the new rate then; until then you stay on {labelOf(currentPlan!)}.
-                    </p>
+                  <div className="flex items-start gap-3 min-w-0 sm:flex-1">
+                    <CalendarClock className="h-5 w-5 shrink-0 mt-0.5" style={{ color: GOLD }} />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-bold tracking-tight">
+                        Switching to {labelOf(pendingPlan)} — ${priceOf(pendingPlan)}/{cadenceOf(pendingPlan)}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        Takes effect on <span className="text-foreground font-semibold">{formatDate(expiresAt)}</span>.
+                        You&rsquo;ll be charged the new rate then; until then you stay on {labelOf(currentPlan!)}.
+                      </p>
+                    </div>
                   </div>
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => currentPlan && runSchedule(currentPlan)}
                     disabled={scheduling}
-                    className="shrink-0"
+                    className="w-full sm:w-auto sm:shrink-0"
                   >
                     {scheduling ? "…" : "Cancel change"}
                   </Button>
@@ -291,7 +293,7 @@ export default function BillingPage() {
                     type="button"
                     onClick={() => runSchedule(otherPlan)}
                     disabled={scheduling}
-                    className="font-bold uppercase tracking-widest"
+                    className="w-full sm:w-auto whitespace-normal text-center font-bold uppercase tracking-widest"
                     style={{ backgroundColor: GOLD, color: "#000" }}
                   >
                     {scheduling
@@ -305,13 +307,13 @@ export default function BillingPage() {
             {/* Manage subscription */}
             <section className="rounded-lg border border-border/40 p-6 space-y-3">
               <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Manage subscription</p>
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-2">
                 {showRenew && currentPlan && (
                   <Button
                     type="button"
                     onClick={() => setIntent({ kind: "renew" })}
                     disabled={busy}
-                    className="font-bold uppercase tracking-widest"
+                    className="w-full sm:w-auto whitespace-normal font-bold uppercase tracking-widest"
                     style={{ backgroundColor: GOLD, color: "#000" }}
                   >
                     {cancelled
@@ -326,7 +328,7 @@ export default function BillingPage() {
                     type="button"
                     variant="outline"
                     onClick={() => setIntent({ kind: "cancel-renew" })}
-                    className="text-rose-500 hover:text-rose-500"
+                    className="w-full sm:w-auto text-rose-500 hover:text-rose-500"
                   >
                     Cancel auto-renew
                   </Button>
@@ -335,7 +337,7 @@ export default function BillingPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setIntent({ kind: "terminate" })}
-                  className="text-rose-500 hover:text-rose-500"
+                  className="w-full sm:w-auto text-rose-500 hover:text-rose-500"
                 >
                   End membership now
                 </Button>

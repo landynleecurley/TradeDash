@@ -280,7 +280,7 @@ export default function Home() {
         <div className="ml-auto flex items-center gap-4">
           <NotificationsBell />
           {usingMockData && (
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mock</span>
+            <span className="hidden sm:inline text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Mock</span>
           )}
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: marketState.color }} />

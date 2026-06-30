@@ -166,7 +166,7 @@ export default function WalletPage() {
         <section>
           <p className="text-sm font-medium text-muted-foreground tracking-wide uppercase">Cash Balance</p>
           {isReady ? (
-            <h1 className="text-5xl sm:text-6xl md:text-7xl font-bold font-mono tracking-tight mt-2 leading-none tabular-nums break-words">
+            <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold font-mono tracking-tight mt-2 leading-none tabular-nums break-words">
               <AnimatedNumber value={cashBalance} formatter={formatCurrency()} duration={500} />
             </h1>
           ) : (

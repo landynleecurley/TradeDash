@@ -130,7 +130,7 @@ export default function AccountPage() {
                 Total portfolio value
               </p>
               {isReady ? (
-                <h2 className="text-5xl font-bold font-mono tracking-tight mt-2 leading-none tabular-nums">
+                <h2 className="text-4xl sm:text-5xl font-bold font-mono tracking-tight mt-2 leading-none tabular-nums break-words">
                   <AnimatedNumber value={totalWealth} formatter={formatCurrency()} duration={500} />
                 </h2>
               ) : (

@@ -539,7 +539,7 @@ export function Dashboard({ symbol }: { symbol: string }) {
             )}
           </div>
 
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:mx-0 sm:px-0">
             {PERIODS.map(({ key }) => {
               const active = key === period;
               return (
@@ -547,7 +547,7 @@ export function Dashboard({ symbol }: { symbol: string }) {
                   key={key}
                   onClick={() => setPeriod(key)}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-bold rounded-full transition-colors uppercase tracking-wide",
+                    "shrink-0 px-3 py-1.5 text-xs font-bold rounded-full transition-colors uppercase tracking-wide",
                     active ? "bg-foreground/10" : "text-muted-foreground hover:bg-foreground/5",
                   )}
                   style={active ? { color: chartAccent } : undefined}
