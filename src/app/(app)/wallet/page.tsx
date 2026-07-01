@@ -13,6 +13,7 @@ import { SpendModal } from "@/components/SpendModal";
 import { TransactionDetailModal } from "@/components/TransactionDetailModal";
 import { OrderPhysicalCardModal } from "@/components/OrderPhysicalCardModal";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchBar } from "@/components/SearchBar";
 import { TopNav } from "@/components/TopNav";
@@ -20,7 +21,7 @@ import { NotificationsBell } from "@/components/NotificationsBell";
 import { AnimatedNumber, formatCurrency } from "@/components/ui/AnimatedNumber";
 import { setCardStatus } from "@/lib/actions";
 import {
-  ArrowDownToLine, ArrowUpFromLine, Plus, Minus, Snowflake, CreditCard,
+  ArrowDownToLine, ArrowUpFromLine, Snowflake, CreditCard,
   ShieldAlert, ShoppingBag, Gauge, Lock, Package, Crown,
 } from "lucide-react";
 import type { Tx } from "@/lib/portfolio-series";
@@ -403,26 +404,24 @@ export default function WalletPage() {
         </section>
 
         <section className="flex gap-3">
-          <Button
-            type="button"
+          <ActionButton
+            variant="positive"
             onClick={() => setTransferMode("deposit")}
             disabled={!isReady}
-            className="flex-1 h-12 text-sm font-bold uppercase tracking-widest gap-2"
-            style={{ backgroundColor: PROFIT, color: "#000" }}
+            className="flex-1"
           >
-            <Plus className="h-4 w-4" />
+            <ArrowDownToLine className="h-4 w-4" />
             Deposit
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
+          </ActionButton>
+          <ActionButton
+            variant="negative"
             onClick={() => setTransferMode("withdraw")}
             disabled={!isReady || cashBalance <= 0}
-            className="flex-1 h-12 text-sm font-bold uppercase tracking-widest gap-2"
+            className="flex-1"
           >
-            <Minus className="h-4 w-4" />
+            <ArrowUpFromLine className="h-4 w-4" />
             Withdraw
-          </Button>
+          </ActionButton>
         </section>
 
         <section className="grid grid-cols-2 md:grid-cols-4 gap-px rounded-lg overflow-hidden border border-border/40">

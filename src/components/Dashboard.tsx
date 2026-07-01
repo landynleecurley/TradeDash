@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useGlobalStockData } from "@/components/StockDataProvider";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/ActionButton";
 import {
   AnimatedNumber,
   formatCurrency,
@@ -611,24 +612,24 @@ export function Dashboard({ symbol }: { symbol: string }) {
 
         <section className="space-y-3">
           <div className="flex gap-3">
-            <Button
-              type="button"
+            <ActionButton
+              variant="positive"
               onClick={() => setTradeMode("buy")}
               disabled={!isReady || selectedStock.price <= 0}
-              className="flex-1 h-12 text-sm font-bold uppercase tracking-widest"
-              style={{ backgroundColor: PROFIT, color: "#000" }}
+              className="flex-1"
             >
+              <ArrowUp className="h-4 w-4" />
               Buy
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
+            </ActionButton>
+            <ActionButton
+              variant="negative"
               onClick={() => setTradeMode("sell")}
               disabled={!isReady || selectedStock.shares <= 0 || selectedStock.price <= 0}
-              className="flex-1 h-12 text-sm font-bold uppercase tracking-widest"
+              className="flex-1"
             >
+              <ArrowDown className="h-4 w-4" />
               Sell
-            </Button>
+            </ActionButton>
           </div>
           {inWatchlist && isReady && (
             <button
