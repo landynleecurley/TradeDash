@@ -30,14 +30,18 @@ type Props = {
 };
 
 function sumToday(
-  transactions: Array<{ t: number; type: string; amount: number }>,
+  transactions: Array<{ t: number; type: string; amount: number; symbol: string | null }>,
   type: "DEPOSIT" | "WITHDRAW",
 ): number {
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   const startUnix = Math.floor(start.getTime() / 1000);
   return transactions.reduce(
-    (acc, tx) => (tx.type === type && tx.t >= startUnix ? acc + tx.amount : acc),
+    // Only user-initiated transfers count toward the daily limit. The Gold
+    // deposit match is also booked as a DEPOSIT but carries a label in
+    // `symbol` (real transfers leave it null), so skip those.
+    (acc, tx) =>
+      tx.type === type && tx.symbol == null && tx.t >= startUnix ? acc + tx.amount : acc,
     0,
   );
 }
@@ -82,12 +86,24 @@ export function TransferModal({ open, onClose, mode, cashBalance, refresh }: Pro
   const externalAcc = externalAccounts.find(a => a.id === externalId) ?? null;
   const hasNoAccounts = externalAccounts.length === 0;
 
-  const amount = Number(amountStr);
-  const validAmount = amountStr !== "" && Number.isFinite(amount) && amount > 0;
+  // Money is stored to the cent (numeric(14,2)); round here so the reviewed
+  // amount, the toast, and what actually posts all agree — and reject sub-cent
+  // amounts that would otherwise book a ghost $0.00 transfer.
+  const amount = Math.round(Number(amountStr) * 100) / 100;
+  const validAmount = amountStr !== "" && Number.isFinite(amount) && amount >= 0.01;
   const overdraft = mode === "withdraw" && validAmount && amount > cashBalance;
   const overLimit = validAmount && usedToday + amount > DAILY_LIMIT;
   const canProceed = validAmount && !overdraft && !overLimit && !!externalAcc;
   const remainingLimit = Math.max(0, DAILY_LIMIT - usedToday);
+
+  // Money input: keep digits and a single decimal point, capped at two
+  // decimals. This makes fractional cents (0.004) and stray characters
+  // impossible to enter, rather than silently rounding them away later.
+  const onAmountChange = (raw: string) => {
+    const cleaned = raw.replace(/[^\d.]/g, "");
+    const [whole, ...rest] = cleaned.split(".");
+    setAmountStr(rest.length > 0 ? `${whole}.${rest.join("").slice(0, 2)}` : whole);
+  };
 
   // From → To rows flip depending on direction.
   const fromAccount = mode === "deposit"
@@ -172,12 +188,10 @@ export function TransferModal({ open, onClose, mode, cashBalance, refresh }: Pro
                   $
                 </span>
                 <Input
-                  type="number"
+                  type="text"
                   inputMode="decimal"
-                  step="0.01"
-                  min="0"
                   value={amountStr}
-                  onChange={(e) => setAmountStr(e.target.value)}
+                  onChange={(e) => onAmountChange(e.target.value)}
                   placeholder="0.00"
                   autoFocus
                   aria-label="Transfer amount"
