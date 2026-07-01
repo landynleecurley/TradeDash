@@ -90,6 +90,9 @@ export type ModalProps = {
   busy?: boolean;
   /** Hide the X close button (still escapable unless busy). */
   showClose?: boolean;
+  /** When false, the panel never scrolls internally — it sizes to its content
+   *  and clamps at max height instead of showing a scrollbar. */
+  scrollable?: boolean;
   /** Hide the chrome header — render children only. */
   hideHeader?: boolean;
   /** Optional class on the inner panel. */
@@ -112,6 +115,7 @@ export function Modal({
   size = "md",
   busy = false,
   showClose = true,
+  scrollable = true,
   hideHeader = false,
   panelClassName,
   initialFocusRef,
@@ -295,7 +299,8 @@ export function Modal({
         onKeyDown={onKeyDown}
         className={[
           // Layout
-          "relative w-full sm:w-full max-h-[90vh] overflow-y-auto",
+          "relative w-full sm:w-full max-h-[90vh]",
+          scrollable ? "overflow-y-auto" : "overflow-hidden",
           "bg-card text-card-foreground border border-border/50 shadow-2xl",
           // Mobile: bottom sheet. Desktop: centered card.
           "rounded-t-2xl sm:rounded-2xl",

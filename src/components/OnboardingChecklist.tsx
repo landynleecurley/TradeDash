@@ -136,10 +136,11 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
         icon={<Sparkles className="h-4 w-4" />}
         iconColor={PROFIT}
         size="md"
+        scrollable={false}
       >
         <div className="space-y-4">
           <ProgressBar completed={completed} total={total} />
-          <StepsList steps={steps} onBeforeCta={snoozeMobile} />
+          <StepsList steps={steps} onBeforeCta={snoozeMobile} compact />
           <ModalFooter align="stretch">
             <Button type="button" variant="ghost" onClick={snoozeMobile} className="w-full">
               Skip for now
@@ -212,19 +213,34 @@ function ProgressBar({ completed, total }: { completed: number; total: number })
 
 // Shared step list. `onBeforeCta` (used by the mobile modal) fires before a
 // step's action so the checklist can close first rather than stack modals.
-function StepsList({ steps, onBeforeCta }: { steps: Step[]; onBeforeCta?: () => void }) {
+// `compact` forces the tighter always-in-a-row layout the mobile modal uses so
+// every step fits on screen without the modal needing to scroll.
+function StepsList({
+  steps,
+  onBeforeCta,
+  compact = false,
+}: {
+  steps: Step[];
+  onBeforeCta?: () => void;
+  compact?: boolean;
+}) {
+  const ctaClass = compact
+    ? "font-bold gap-1 shrink-0 w-auto h-8"
+    : "font-bold gap-1 shrink-0 w-full sm:w-auto h-11 sm:h-7";
   return (
     <ul className="space-y-2">
       {steps.map((step, i) => (
         <li
           key={step.key}
-          className={`rounded-lg border p-3.5 flex flex-col gap-3 sm:flex-row sm:items-center transition-colors ${
+          className={`rounded-lg border flex gap-3 transition-colors ${
+            compact ? 'p-3 flex-row items-center' : 'p-3.5 flex-col sm:flex-row sm:items-center'
+          } ${
             step.done
               ? 'border-border/40 bg-foreground/[0.02]'
               : 'border-border/50 hover:border-border'
           }`}
         >
-          <div className="flex items-center gap-3 min-w-0 sm:flex-1">
+          <div className={`flex items-center gap-3 min-w-0 ${compact ? 'flex-1' : 'sm:flex-1'}`}>
             <div
               className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
               style={{
@@ -256,7 +272,7 @@ function StepsList({ steps, onBeforeCta }: { steps: Step[]; onBeforeCta?: () => 
                 render={<Link href={step.cta.href} onClick={onBeforeCta} />}
                 nativeButton={false}
                 size="sm"
-                className="font-bold gap-1 w-full sm:w-auto h-11 sm:h-7 shrink-0"
+                className={ctaClass}
                 style={{ backgroundColor: PROFIT, color: '#000' }}
               >
                 {step.cta.label} <ArrowRight className="h-3 w-3" />
@@ -266,7 +282,7 @@ function StepsList({ steps, onBeforeCta }: { steps: Step[]; onBeforeCta?: () => 
                 type="button"
                 size="sm"
                 onClick={() => { onBeforeCta?.(); step.cta.onClick?.(); }}
-                className="font-bold gap-1 w-full sm:w-auto h-11 sm:h-7 shrink-0"
+                className={ctaClass}
                 style={{ backgroundColor: PROFIT, color: '#000' }}
               >
                 {step.cta.label} <ArrowRight className="h-3 w-3" />
