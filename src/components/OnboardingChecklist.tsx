@@ -8,10 +8,16 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { InfoHint } from "@/components/ui/InfoHint";
+import { Modal, ModalFooter } from "@/components/ui/Modal";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useGlobalStockData } from "@/components/StockDataProvider";
 
 const PROFIT = "var(--brand)";
+// Desktop dismissal is permanent (localStorage). On mobile the checklist is a
+// focused modal that should return every time the user comes back until every
+// step is done, so its "skip" only snoozes for the current session.
 const STORAGE_KEY = "tradedash.onboarding.dismissed";
+const SESSION_SNOOZE_KEY = "tradedash.onboarding.snoozed";
 
 type Step = {
   key: string;
@@ -30,21 +36,32 @@ type Props = {
 
 export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Props) {
   const { transactions, externalAccounts, card, stocks, isReady } = useGlobalStockData();
+  const isMobile = useIsMobile();
   const [dismissed, setDismissed] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
-  // Read the dismissal flag from localStorage on mount. We never re-hydrate
-  // from server, so a user who dismissed it on one device sees it again on
-  // another — that's fine for a virtual product.
+  // Desktop: honor the permanent dismissal. Mobile: open the modal unless it
+  // was skipped earlier this session. sessionStorage clears when the app is
+  // closed, so a returning user sees it again until they finish every step.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (window.localStorage.getItem(STORAGE_KEY) === "1") setDismissed(true);
+    if (window.sessionStorage.getItem(SESSION_SNOOZE_KEY) !== "1") setMobileOpen(true);
   }, []);
 
   const dismiss = () => {
     setDismissed(true);
     if (typeof window !== "undefined") {
       window.localStorage.setItem(STORAGE_KEY, "1");
+    }
+  };
+
+  // Mobile "skip"/dismiss: hide for this session only.
+  const snoozeMobile = () => {
+    setMobileOpen(false);
+    if (typeof window !== "undefined") {
+      window.sessionStorage.setItem(SESSION_SNOOZE_KEY, "1");
     }
   };
 
@@ -99,9 +116,42 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
   const allDone = completed === total;
 
   if (!isReady) return null;
-  if (dismissed) return null;
-  // Auto-hide once everything's complete (no need to clutter the home page).
+  // Once every step is done there's nothing to nudge — hide it for good.
   if (allDone) return null;
+
+  const heading = completed === 0
+    ? 'Welcome to TradeDash'
+    : `${completed} of ${total} done — keep going`;
+
+  // Mobile: a focused modal. Tapping any step's CTA also snoozes it so the
+  // action's own modal (deposit, issue card…) isn't stacked underneath.
+  if (isMobile) {
+    return (
+      <Modal
+        open={mobileOpen}
+        onClose={snoozeMobile}
+        eyebrow="Get started"
+        title={heading}
+        subtitle="A few quick steps and you'll be ready to invest, spend, and grow your wallet."
+        icon={<Sparkles className="h-4 w-4" />}
+        iconColor={PROFIT}
+        size="md"
+      >
+        <div className="space-y-4">
+          <ProgressBar completed={completed} total={total} />
+          <StepsList steps={steps} onBeforeCta={snoozeMobile} />
+          <ModalFooter align="stretch">
+            <Button type="button" variant="ghost" onClick={snoozeMobile} className="w-full">
+              Skip for now
+            </Button>
+          </ModalFooter>
+        </div>
+      </Modal>
+    );
+  }
+
+  // Desktop: inline card with a permanent dismiss.
+  if (dismissed) return null;
 
   return (
     <section
@@ -117,11 +167,7 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
             <Sparkles className="h-3 w-3" style={{ color: PROFIT }} />
             Get started
           </p>
-          <h2 className="text-lg font-bold tracking-tight mt-1">
-            {completed === 0
-              ? 'Welcome to TradeDash'
-              : `${completed} of ${total} done — keep going`}
-          </h2>
+          <h2 className="text-lg font-bold tracking-tight mt-1">{heading}</h2>
           <p className="text-sm text-muted-foreground mt-1">
             A few quick steps and you&rsquo;ll be ready to invest, spend, and grow your wallet.
           </p>
@@ -146,81 +192,89 @@ export function OnboardingChecklist({ onAddSymbol, onDeposit, onIssueCard }: Pro
         </div>
       </div>
 
-      {/* Progress bar */}
-      <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
-        <div
-          className="h-full transition-all duration-500"
-          style={{
-            width: `${(completed / total) * 100}%`,
-            backgroundColor: PROFIT,
-          }}
-        />
-      </div>
+      <ProgressBar completed={completed} total={total} />
 
-      {!collapsed && (
-        <ul className="space-y-2">
-          {steps.map((step, i) => (
-            <li
-              key={step.key}
-              className={`rounded-lg border p-3.5 flex flex-col gap-3 sm:flex-row sm:items-center transition-colors ${
-                step.done
-                  ? 'border-border/40 bg-foreground/[0.02]'
-                  : 'border-border/50 hover:border-border'
-              }`}
-            >
-              <div className="flex items-center gap-3 min-w-0 sm:flex-1">
-                <div
-                  className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
-                  style={{
-                    backgroundColor: step.done ? `var(--brand-1a)` : 'var(--muted)',
-                    color: step.done ? PROFIT : 'var(--muted-foreground)',
-                  }}
-                >
-                  {step.done ? <Check className="h-4 w-4" /> : step.icon}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5">
-                    <p
-                      className={`text-sm font-bold tracking-tight ${
-                        step.done ? 'text-muted-foreground line-through decoration-muted-foreground/50' : ''
-                      }`}
-                    >
-                      <span className="text-muted-foreground/60 mr-1.5 font-mono text-xs">
-                        {String(i + 1).padStart(2, '0')}
-                      </span>
-                      {step.title}
-                    </p>
-                    {!step.done && <InfoHint label={step.detail} side="top" />}
-                  </div>
-                </div>
-              </div>
-              {!step.done && (
-                step.cta.href ? (
-                  <Button
-                    render={<Link href={step.cta.href} />}
-                    nativeButton={false}
-                    size="sm"
-                    className="font-bold gap-1 w-full sm:w-auto h-11 sm:h-7 shrink-0"
-                    style={{ backgroundColor: PROFIT, color: '#000' }}
-                  >
-                    {step.cta.label} <ArrowRight className="h-3 w-3" />
-                  </Button>
-                ) : (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={step.cta.onClick}
-                    className="font-bold gap-1 w-full sm:w-auto h-11 sm:h-7 shrink-0"
-                    style={{ backgroundColor: PROFIT, color: '#000' }}
-                  >
-                    {step.cta.label} <ArrowRight className="h-3 w-3" />
-                  </Button>
-                )
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+      {!collapsed && <StepsList steps={steps} />}
     </section>
+  );
+}
+
+function ProgressBar({ completed, total }: { completed: number; total: number }) {
+  return (
+    <div className="h-1.5 rounded-full bg-foreground/10 overflow-hidden">
+      <div
+        className="h-full transition-all duration-500"
+        style={{ width: `${(completed / total) * 100}%`, backgroundColor: PROFIT }}
+      />
+    </div>
+  );
+}
+
+// Shared step list. `onBeforeCta` (used by the mobile modal) fires before a
+// step's action so the checklist can close first rather than stack modals.
+function StepsList({ steps, onBeforeCta }: { steps: Step[]; onBeforeCta?: () => void }) {
+  return (
+    <ul className="space-y-2">
+      {steps.map((step, i) => (
+        <li
+          key={step.key}
+          className={`rounded-lg border p-3.5 flex flex-col gap-3 sm:flex-row sm:items-center transition-colors ${
+            step.done
+              ? 'border-border/40 bg-foreground/[0.02]'
+              : 'border-border/50 hover:border-border'
+          }`}
+        >
+          <div className="flex items-center gap-3 min-w-0 sm:flex-1">
+            <div
+              className="h-8 w-8 rounded-full flex items-center justify-center shrink-0 transition-colors"
+              style={{
+                backgroundColor: step.done ? `var(--brand-1a)` : 'var(--muted)',
+                color: step.done ? PROFIT : 'var(--muted-foreground)',
+              }}
+            >
+              {step.done ? <Check className="h-4 w-4" /> : step.icon}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5">
+                <p
+                  className={`text-sm font-bold tracking-tight ${
+                    step.done ? 'text-muted-foreground line-through decoration-muted-foreground/50' : ''
+                  }`}
+                >
+                  <span className="text-muted-foreground/60 mr-1.5 font-mono text-xs">
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  {step.title}
+                </p>
+                {!step.done && <InfoHint label={step.detail} side="top" />}
+              </div>
+            </div>
+          </div>
+          {!step.done && (
+            step.cta.href ? (
+              <Button
+                render={<Link href={step.cta.href} onClick={onBeforeCta} />}
+                nativeButton={false}
+                size="sm"
+                className="font-bold gap-1 w-full sm:w-auto h-11 sm:h-7 shrink-0"
+                style={{ backgroundColor: PROFIT, color: '#000' }}
+              >
+                {step.cta.label} <ArrowRight className="h-3 w-3" />
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => { onBeforeCta?.(); step.cta.onClick?.(); }}
+                className="font-bold gap-1 w-full sm:w-auto h-11 sm:h-7 shrink-0"
+                style={{ backgroundColor: PROFIT, color: '#000' }}
+              >
+                {step.cta.label} <ArrowRight className="h-3 w-3" />
+              </Button>
+            )
+          )}
+        </li>
+      ))}
+    </ul>
   );
 }
